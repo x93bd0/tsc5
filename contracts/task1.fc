@@ -48,6 +48,7 @@ int now() asm "NOW";
   } elseif (op == 0xbb4be234)
   {
     throw_if(124, et < now());
+    accept_message();
 
     cell msg = begin_cell()
       .store_uint(0x18, 6)
