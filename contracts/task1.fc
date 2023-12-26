@@ -9,19 +9,19 @@ int now() asm "NOW";
 
 }
 
-(int, int, int, slice, int) load_data() inline_ref
+(int, int, slice, int) load_data() inline_ref
 {
   slice st = get_data().begin_parse();
   return (
     st~load_uint(256), st~load_uint(32),
-    st~load_uint(8), st~load_bits(256),
+    st~load_bits(8 + 256),
     st~load_uint(32)
   );
 }
 
 () recv_external(slice s) {
   int op = s~load_uint(32);
-  (int pk, int et, int g, slice addr, int sno) = load_data();
+  (int pk, int et, slice addr, int sno) = load_data();
 
   s~load_uint(64);
   if (op == 0x9df10277)
@@ -42,7 +42,6 @@ int now() asm "NOW";
     set_data(begin_cell()
       .store_uint(pk, 256)
       .store_uint(lf + et, 32)
-      .store_uint(g, 8)
       .store_slice(addr)
       .store_uint(ns, 32)
     .end_cell());
