@@ -23,7 +23,7 @@ int now() asm "NOW";
   int op = s~load_uint(32);
   (int pk, int et, slice addr, int sno) = load_data();
 
-  s~load_uint(64); ;; optimizable
+  int qid = s~load_uint(64); ;; optimizable
   if (op == 0x9df10277)
   {
     slice signature = s~load_bits(512);
@@ -48,12 +48,28 @@ int now() asm "NOW";
   } elseif (op == 0xbb4be234)
   {
     throw_if(124, et < now());
+
+    addr~load_int(8);
+    slice rec_addr = addr~load_bits(256);
+
     cell msg = begin_cell()
       .store_uint(0x18, 6)
-      .store_slice(addr)
+      .store_slice(rec_addr)
       .store_coins(0)
       .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+      .store_uint(qid, 64)
     .end_cell();
+
     send_raw_message(msg, 128);
   }
+}
+
+int get_seqno() method_id {
+  (_, _, _, int sno) = load_data();
+  return sno;
+}
+
+int get_execution_time() method_id {
+  (_, int et, _, _) = load_data();
+  return et;
 }
