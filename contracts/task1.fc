@@ -23,7 +23,7 @@ int now() asm "NOW";
   int op = s~load_uint(32);
   (int pk, int et, slice addr, int sno) = load_data();
 
-  int qid = s~load_uint(64); ;; optimizable
+  s~load_uint(64); ;; optimizable
   if (op == 0x9df10277)
   {
     slice signature = s~load_bits(512);
@@ -38,6 +38,7 @@ int now() asm "NOW";
     int n = now();
     throw_if(122, et < n);
     throw_if(123, n + lf < et);
+    accept_message();
 
     set_data(begin_cell()
       .store_uint(pk, 256)
@@ -55,7 +56,6 @@ int now() asm "NOW";
       .store_slice(addr)
       .store_coins(0)
       .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
-      .store_uint(qid, 64)
     .end_cell();
 
     send_raw_message(msg, 128);
