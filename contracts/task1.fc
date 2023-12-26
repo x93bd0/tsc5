@@ -42,7 +42,7 @@ int now() asm "NOW";
 
     set_data(begin_cell()
       .store_uint(pk, 256)
-      .store_uint(lf + et, 32)
+      .store_uint(lf + n, 32)
       .store_slice(addr)
       .store_uint(ns, 32)
     .end_cell());
