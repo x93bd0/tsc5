@@ -4,6 +4,6 @@
 
 }
 
-() Recv(slice s) 0x9df10277 {
+() update#9df10277 (slice s) {
   
 }
