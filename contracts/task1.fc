@@ -48,7 +48,7 @@ int now() asm "NOW";
     .end_cell());
   } elseif (op == 0xbb4be234)
   {
-    throw_if(124, et < now());
+    throw_if(124, et > now());
     accept_message();
 
     cell msg = begin_cell()
