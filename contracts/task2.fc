@@ -1,5 +1,55 @@
 #include "imports/stdlib.fc";
 
-() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+(cell, ()) ~dict_set(cell dict, int key_len, slice index, slice value) asm(value index dict key_len) "DICTSET";
+(cell, int) ~dict_delete(cell dict, int key_len, slice index) asm(index dict key_len) "DICTDEL";
 
+
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+  if (in_msg_body.slice_empty?())
+  {
+    return ();
+  }
+
+  slice cs = in_msg_full.begin_parse();
+  cs~load_uint(4);
+
+  slice snd_addr = cs~load_msg_addr();
+  int op = in_msg_body~load_uint(32);
+
+  slice data = get_data().begin_parse();
+  slice adm_addr = data~load_msg_addr();
+
+  cell users = new_dict();
+  if (data.slice_empty?())
+  {
+    users = data~load_dict();
+  }
+
+  if (op == 0x368ddef3)
+  {
+    throw_if(120, slice_hash(snd_addr) != slice_hash(adm_addr));
+    accept_message();
+
+    slice addr = in_msg_body~load_msg_addr();
+    slice share = in_msg_body~load_bits(32);
+    users~dict_set(256, addr, share);
+  }
+
+  elseif (op == 0x278205c8)
+  {
+    slice addr = in_msg_body~load_msg_addr();
+    throw_if(120, slice_hash(snd_addr) != slice_hash(adm_addr));
+    throw_unless(121, users~dict_delete(256, addr));
+    accept_message();
+  }
+
+  elseif (op == 0x68530b3)
+  {
+    accept_message();
+  }
+
+  elseif (op == 0x7362d09c)
+  {
+    accept_message();
+  }
 }
