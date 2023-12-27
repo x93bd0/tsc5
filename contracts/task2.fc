@@ -14,18 +14,11 @@
     return ();
   }
 
-  slice cs = in_msg_full.begin_parse();
-  cs~load_uint(4);
-
-  slice snd_addr = cs~load_msg_addr();
-
   int op = in_msg_body~load_uint(32);
-  in_msg_body~load_uint(64);
-
   slice data = get_data().begin_parse();
   slice adm_addr = data~load_msg_addr();
-
   cell users = new_dict();
+
   ifnot (data.slice_empty?())
   {
     users = data~load_dict();
@@ -33,7 +26,6 @@
 
   if (op == 0x278205c8)
   {
-    slice addr = in_msg_body~load_msg_addr();
     set_data(begin_cell()
       .store_slice(adm_addr)
       .store_dict(users)
