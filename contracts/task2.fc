@@ -32,7 +32,7 @@
     set_data(begin_cell()
       .store_slice(admin)
       .store_dict(dict)
-    .end_cell())
+    .end_cell());
   }
 
   elseif (op == 0x278205c8)
