@@ -46,7 +46,7 @@
   elseif (op == 0x278205c8)
   {
     slice addr = in_msg_body~load_msg_addr();
-    throw_unless(121, users~dict_delete(256, addr));
+    {- throw_unless(121, users~dict_delete(256, addr)); -}
 
     set_data(begin_cell()
       .store_slice(adm_addr)
@@ -58,7 +58,7 @@
   {
     throw_if(122, users.dict_empty?());
 
-    (slice key, slice val, int flag) = users.dict_get_min?(256);
+    {- (slice key, slice val, int flag) = users.dict_get_min?(256);
     while (flag) {
       cell msg = begin_cell()
         .store_uint(0x18, 6)
@@ -69,7 +69,7 @@
 
       send_raw_message(msg, 1);
       (key, val, flag) = users.dict_get_next?(256, key);
-    }
+    } -}
   }
 
   elseif (op == 0x7362d09c)
