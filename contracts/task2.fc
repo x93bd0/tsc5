@@ -13,7 +13,7 @@
   }
 
   slice cs = in_msg_full.begin_parse();
-  ;; cs~load_uint(4);
+  cs~load_uint(4);
 
   slice snd_addr = cs~load_msg_addr();
   (int wc, int snd_addr_hash) = parse_std_addr(snd_addr);
