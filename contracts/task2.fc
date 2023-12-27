@@ -37,9 +37,10 @@
     throw_if(122, users.dict_empty?());
   }
 
-  save_data(begin_cell()
+  set_data(begin_cell()
     .store_slice(adm_addr)
-    .store_dict(users).end_cell());
+    .store_dict(users)
+  .end_cell());
 }
 
 (cell) get_users() method_id {
