@@ -54,7 +54,7 @@
   return d~load_dict();
 }
 
-(int) get_user_share(slice user_address) method_id {
+(slice) get_user_share(slice user_address) method_id {
   (slice d, int a) = get_users().dict_get?(256, user_address);
-  return d~load_uint(32);
+  return d;
 }
