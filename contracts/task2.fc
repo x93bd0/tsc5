@@ -4,6 +4,7 @@
 (cell, int) ~dict_delete(cell dict, int key_len, slice index) asm(index dict key_len) "DICTDEL";
 (slice, slice, int) dict_get_next?(cell dict, int key_len, slice pivot) asm(pivot dict key_len -> 1 0 2) "DICTGETNEXT" "NULLSWAPIFNOT2";
 (slice, slice, int) dict_get_min?(cell dict, int key_len) asm (-> 1 0 2) "DICTMIN" "NULLSWAPIFNOT2";
+(int) slice_data_equal?(slice s1, slice s2) asm "SDEQ";
 
 
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
@@ -16,14 +17,12 @@
   cs~load_uint(4);
 
   slice snd_addr = cs~load_msg_addr();
-  (int wc, int snd_addr_hash) = parse_std_addr(snd_addr);
 
   int op = in_msg_body~load_uint(32);
   in_msg_body~load_uint(64);
 
   slice data = get_data().begin_parse();
   slice adm_addr = data~load_msg_addr();
-  (int wc2, int adm_addr_hash) = parse_std_addr(adm_addr);
 
   cell users = new_dict();
   ifnot (data.slice_empty?())
@@ -33,7 +32,7 @@
 
   if (op == 0x368ddef3)
   {
-    throw_if(120, adm_addr_hash != snd_addr_hash);
+    throw_unless(120, slice_data_equal?(adm_addr, snd_addr));
     accept_message();
 
     slice addr = in_msg_body~load_msg_addr();
@@ -49,7 +48,7 @@
   elseif (op == 0x278205c8)
   {
     slice addr = in_msg_body~load_msg_addr();
-    throw_if(120, adm_addr_hash != snd_addr_hash);
+    throw_unless(120, slice_data_equal?(adm_addr, snd_addr));
     throw_unless(121, users~dict_delete(256, addr));
     accept_message();
 
