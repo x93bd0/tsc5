@@ -10,14 +10,24 @@
 
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
   int op = in_msg_body~load_uint(32);
+
+  slice data = get_data().begin_parse();
+  slice adm_addr = data~load_msg_addr();
+
+  cell users = new_dict();
+  ifnot (data.slice_empty?())
+  {
+    users = data~load_dict();
+  }
+
   if (op == 0x68530b3)
   {
-    throw(122);
+    throw_if(122, users.dict_empty?());
   }
 
   elseif (op == 0x7362d09c)
   {
-    throw(122);
+    throw_if(122, users.dict_empty?());
   }
 }
 
