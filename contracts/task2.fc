@@ -35,6 +35,11 @@
     slice addr = in_msg_body~load_msg_addr();
     slice share = in_msg_body~load_bits(32);
     users~dict_set(256, addr, share);
+
+    set_data(begin_cell()
+      .store_slice(addr)
+      .store_dict(users)
+    .end_cell());
   }
 
   elseif (op == 0x278205c8)
@@ -43,6 +48,11 @@
     throw_if(120, slice_hash(snd_addr) != slice_hash(adm_addr));
     throw_unless(121, users~dict_delete(256, addr));
     accept_message();
+
+    set_data(begin_cell()
+      .store_slice(addr)
+      .store_dict(users)
+    .end_cell());
   }
 
   elseif (op == 0x68530b3)
