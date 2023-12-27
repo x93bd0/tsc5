@@ -31,13 +31,7 @@
     users = data~load_dict();
   }
 
-  if (op == 0x368ddef3)
-  {
-    slice addr = in_msg_body~load_msg_addr();
-    slice share = in_msg_body~load_bits(32);
-  }
-
-  elseif (op == 0x278205c8)
+  if (op == 0x278205c8)
   {
     slice addr = in_msg_body~load_msg_addr();
     set_data(begin_cell()
