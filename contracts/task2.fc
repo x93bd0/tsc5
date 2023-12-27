@@ -23,7 +23,7 @@
   slice adm_addr = data~load_msg_addr();
 
   cell users = new_dict();
-  if (data.slice_empty?())
+  ifnot (data.slice_empty?())
   {
     users = data~load_dict();
   }
