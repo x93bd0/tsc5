@@ -17,7 +17,7 @@ int dict_empty?(cell c) asm "DICTEMPTY";
   }
 
   int op = in_msg_body~load_uint(32);
-  in_msg_body~load_uint(64);
+  int query_id = in_msg_body~load_uint(64);
 
   slice cs = in_msg_full.begin_parse();
   cs~skip_bits(4);
@@ -85,7 +85,38 @@ int dict_empty?(cell c) asm "DICTEMPTY";
 
   elseif (op == 0x7362d09c)
   {
-    throw_if(122, dict.dict_empty?());
+    (int key, slice val, int flag) = udict_get_min?(dict, 256);
+    int total_share = 0;
+    while (flag)
+    {
+      total_share += val~load_uint(32);
+      (key, val, flag) = udict_get_next?(dict, 256, key);
+    }
+
+    (int key, slice val, int flag) = udict_get_min?(dict, 256);
+    while (flag)
+    {
+      int share = val~load_uint(32);
+      int amount = in_msg_body~load_coins();
+      throw_if(122, dict.dict_empty?());
+
+      cell msg = begin_cell()
+        .store_uint(0x10, 6)
+        .store_slice(addr)
+        .store_coins(1)
+        .store_uint(1, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+        .store_ref(begin_cell()
+          .store_uint(0x7362d09c, 32)
+          .store_uint(query_id, 64)
+          .store_coins(share * amount / total_share)
+          .store_uint(1024, 11)
+          .store_uint(key, 256)
+        .end_cell())
+      .end_cell();
+
+      send_raw_message(msg, 1);
+      (key, val, flag) = udict_get_next?(dict, 256, key);
+    }
   }
 }
 
