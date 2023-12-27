@@ -28,7 +28,7 @@
   if (op == 0x368ddef3)
   {
     throw_unless(120, slice_data_equal?(admin, addr));
-    dict~dict_set(256, in_msg_body~load_msg_addr().skip_bits(11), in_msg_body~load_uint(32));
+    dict~dict_set(256, in_msg_body~load_msg_addr().skip_bits(11), in_msg_body~load_bits(32));
     set_data(begin_cell()
       .store_slice(admin)
       .store_dict(dict)
