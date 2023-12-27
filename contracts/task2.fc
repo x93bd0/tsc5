@@ -2,6 +2,8 @@
 
 (cell, ()) ~dict_set(cell dict, int key_len, slice index, slice value) asm(value index dict key_len) "DICTSET";
 (cell, int) ~dict_delete(cell dict, int key_len, slice index) asm(index dict key_len) "DICTDEL";
+(slice, slice, int) dict_get_next?(cell dict, int key_len, slice pivot) asm(pivot dict key_len -> 1 0 2) "DICTGETNEXT" "NULLSWAPIFNOT2";
+(slice, slice, int) dict_get_min?(cell dict, int key_len) asm (-> 1 0 2) "DICTMIN" "NULLSWAPIFNOT2";
 
 
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
@@ -47,6 +49,19 @@
   {
     throw_if(122, users.dict_empty?());
     accept_message();
+
+    (slice key, slice val, int flag) = users.dict_get_min?(256);
+    while (flag) {
+      cell msg = begin_cell()
+        .store_uint(0x18, 6)
+        .store_slice(key)
+        .store_coins(val~load_uint(32))
+        .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+      .end_cell();
+
+      send_raw_message(msg, 1);
+      (key, val, flag) = users.dict_get_next?(256, key);
+    }
   }
 
   elseif (op == 0x7362d09c)
