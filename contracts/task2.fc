@@ -33,8 +33,6 @@
 
   if (op == 0x368ddef3)
   {
-    throw_unless(120, slice_data_equal?(adm_addr, snd_addr));
-
     slice addr = in_msg_body~load_msg_addr();
     slice share = in_msg_body~load_bits(32);
     users~dict_set(256, addr, share);
@@ -47,9 +45,7 @@
 
   elseif (op == 0x278205c8)
   {
-    throw_unless(120, slice_data_equal?(adm_addr, snd_addr));
     slice addr = in_msg_body~load_msg_addr();
-    throw_unless(120, slice_data_equal?(adm_addr, snd_addr));
     throw_unless(121, users~dict_delete(256, addr));
 
     set_data(begin_cell()
@@ -60,7 +56,6 @@
 
   elseif (op == 0x68530b3)
   {
-    throw_unless(120, slice_data_equal?(adm_addr, snd_addr));
     throw_if(122, users.dict_empty?());
 
     (slice key, slice val, int flag) = users.dict_get_min?(256);
