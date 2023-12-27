@@ -85,7 +85,7 @@ int dict_empty?(cell c) asm "DICTEMPTY";
 
   elseif (op == 0x7362d09c)
   {
-    int amount = in_msg_body~load_coins();
+    int amount = in_msg_body~load_uint(16);
     throw_if(122, dict.dict_empty?());
 
     (int key, slice val, int flag) = udict_get_min?(dict, 256);
@@ -126,9 +126,9 @@ int dict_empty?(cell c) asm "DICTEMPTY";
   return d~load_dict();
 }
 
-(slice) get_user_share(slice user_address) method_id {
+(int) get_user_share(slice user_address) method_id {
   user_address~skip_bits(11);
   (slice d, int a) = get_users().udict_get?(256,
     user_address~load_uint(256));
-  return d;
+  return d~load_uint(32);
 }
