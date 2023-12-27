@@ -85,6 +85,9 @@ int dict_empty?(cell c) asm "DICTEMPTY";
 
   elseif (op == 0x7362d09c)
   {
+    int amount = in_msg_body~load_coins();
+    throw_if(122, dict.dict_empty?());
+
     (int key, slice val, int flag) = udict_get_min?(dict, 256);
     int total_share = 0;
     while (flag)
@@ -97,9 +100,6 @@ int dict_empty?(cell c) asm "DICTEMPTY";
     while (flag)
     {
       int share = val~load_uint(32);
-      int amount = in_msg_body~load_coins();
-      throw_if(122, dict.dict_empty?());
-
       cell msg = begin_cell()
         .store_uint(0x10, 6)
         .store_slice(addr)
