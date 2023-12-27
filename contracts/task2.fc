@@ -1,7 +1,7 @@
 #include "imports/stdlib.fc";
 
 (cell, ()) ~udict_set(cell dict, int key_len, int index, slice value) asm(value index dict key_len) "DICTUSET";
-(cell, int) ~udict_delete(cell dict, int key_len, int index) asm(index dict key_len) "DICTUDEL";
+(cell, int) udict_delete?(cell dict, int key_len, int index) asm(index dict key_len) "DICTUDEL";
 (int, slice, int) udict_get_next?(cell dict, int key_len, int pivot) asm(pivot dict key_len -> 1 0 2) "DICTUGETNEXT" "NULLSWAPIFNOT2";
 (int, slice, int) udict_get_min?(cell dict, int key_len) asm (-> 1 0 2) "DICTUMIN" "NULLSWAPIFNOT2";
 (int) slice_data_equal?(slice s1, slice s2) asm "SDEQ";
@@ -49,7 +49,8 @@
   {
     slice addr = in_msg_body~load_msg_addr();
     throw_unless(120, slice_data_equal?(adm_addr, snd_addr));
-    ;; throw_unless(121, users~udict_delete(256, slice_hash(addr)));
+    (users, int flag) = udict_delete?(users, 256, slice_hash(addr));
+    throw_unless(121, flag == -1); ;; Not executing
     accept_message();
 
     set_data(begin_cell()
