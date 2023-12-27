@@ -73,7 +73,7 @@ int dict_empty?(cell c) asm "DICTEMPTY";
       cell msg = begin_cell()
         .store_uint(0x18, 6)
         .store_uint(1024, 11)
-        .store_uint(key, 32)
+        .store_uint(key, 256)
         .store_coins(share * msg_value / total_share)
         .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
       .end_cell();
