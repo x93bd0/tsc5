@@ -17,6 +17,7 @@
 
   slice snd_addr = cs~load_msg_addr();
   int op = in_msg_body~load_uint(32);
+  in_msg_body~load_uint(64);
 
   slice data = get_data().begin_parse();
   slice adm_addr = data~load_msg_addr();
