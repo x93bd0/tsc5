@@ -1,9 +1,10 @@
 #include "imports/stdlib.fc";
 
-(cell, ()) ~udict_set(cell dict, int key_len, int index, slice value) asm(value index dict key_len) "DICTUSET";
-(cell, int) udict_delete?(cell dict, int key_len, int index) asm(index dict key_len) "DICTUDEL";
-(int, slice, int) udict_get_next?(cell dict, int key_len, int pivot) asm(pivot dict key_len -> 1 0 2) "DICTUGETNEXT" "NULLSWAPIFNOT2";
-(int, slice, int) udict_get_min?(cell dict, int key_len) asm (-> 1 0 2) "DICTUMIN" "NULLSWAPIFNOT2";
+(cell, ()) ~dict_set(cell dict, int key_len, slice index, slice value) asm(value index dict key_len) "DICTSET";
+(cell, int) ~dict_delete(cell dict, int key_len, slice index) asm(index dict key_len) "DICTDEL";
+(slice, slice, int) dict_get_next?(cell dict, int key_len, slice pivot) asm(pivot dict key_len -> 1 0 2) "DICTGETNEXT" "NULLSWAPIFNOT2";
+(slice, slice, int) dict_get_min?(cell dict, int key_len) asm (-> 1 0 2) "DICTMIN" "NULLSWAPIFNOT2";
+(slice, int) dict_get?(cell dict, int key_len, slice index) asm(index dict key_len) "DICTGET" "NULLSWAPIFNOT";
 (int) slice_data_equal?(slice s1, slice s2) asm "SDEQ";
 
 
@@ -23,7 +24,12 @@
 
   slice data = get_data().begin_parse();
   slice adm_addr = data~load_msg_addr();
-  cell users = data~load_dict();
+
+  cell users = new_dict();
+  ifnot (data.slice_empty?())
+  {
+    users = data~load_dict();
+  }
 
   if (op == 0x368ddef3)
   {
@@ -31,7 +37,7 @@
 
     slice addr = in_msg_body~load_msg_addr();
     slice share = in_msg_body~load_bits(32);
-    users~udict_set(256, slice_hash(addr), share);
+    users~dict_set(256, addr, share);
 
     set_data(begin_cell()
       .store_slice(adm_addr)
@@ -41,10 +47,10 @@
 
   elseif (op == 0x278205c8)
   {
+    throw_unless(120, slice_data_equal?(adm_addr, snd_addr));
     slice addr = in_msg_body~load_msg_addr();
     throw_unless(120, slice_data_equal?(adm_addr, snd_addr));
-    (users, int flag) = udict_delete?(users, 256, slice_hash(addr));
-    throw_unless(121, flag == -1); ;; Not executing
+    throw_unless(121, users~dict_delete(256, addr));
 
     set_data(begin_cell()
       .store_slice(adm_addr)
@@ -54,9 +60,10 @@
 
   elseif (op == 0x68530b3)
   {
+    throw_unless(120, slice_data_equal?(adm_addr, snd_addr));
     throw_if(122, users.dict_empty?());
 
-    {- (int key, slice val, int flag) = users.udict_get_min?(256);
+    (slice key, slice val, int flag) = users.dict_get_min?(256);
     while (flag) {
       cell msg = begin_cell()
         .store_uint(0x18, 6)
@@ -67,11 +74,22 @@
 
       send_raw_message(msg, 1);
       (key, val, flag) = users.dict_get_next?(256, key);
-    } -}
+    }
   }
 
   elseif (op == 0x7362d09c)
   {
     throw_if(122, users.dict_empty?());
   }
+}
+
+(cell) get_users() method_id {
+  slice d = get_data().begin_parse();
+  d~load_msg_addr();
+  return d~load_dict();
+}
+
+(int) get_user_share(slice user_address) method_id {
+  (slice d, int a) = get_users().dict_get?(256, user_address);
+  return d~load_uint(32);
 }
