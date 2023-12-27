@@ -13,6 +13,39 @@
   {
     return ();
   }
+
+  int op = in_msg_body~load_uint(32);
+  in_msg_body~load_uint(64);
+
+  slice cs = in_msg_full.begin_parse();
+  cs~skip_bits(4);
+  slice addr = cs~load_msg_addr();
+
+  slice data = get_data().begin_parse();
+  slice admin = data~load_msg_addr();
+  cell dict = data~load_dict();
+
+  if (op == 0x368ddef3)
+  {
+    throw_unless(120, slice_data_equal?(admin, addr));
+  }
+
+  elseif (op == 0x278205c8)
+  {
+    throw_unless(120, slice_data_equal?(admin, addr));
+    (users, int flag) = dict_delete(256, in_msg_body~load_msg_addr());
+    throw_if(121, flag == 0);
+  }
+
+  elseif (op == 0x68530b3)
+  {
+    throw_if(122, users.slice_empty?());
+  }
+
+  elseif (op == 0x7362d09c)
+  {
+    throw_if(122, users.slice_empty?());
+  }
 }
 
 (cell) get_users() method_id {
