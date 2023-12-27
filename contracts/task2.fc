@@ -37,7 +37,7 @@
     users~dict_set(256, addr, share);
 
     set_data(begin_cell()
-      .store_slice(addr)
+      .store_slice(adm_addr)
       .store_dict(users)
     .end_cell());
   }
@@ -50,7 +50,7 @@
     accept_message();
 
     set_data(begin_cell()
-      .store_slice(addr)
+      .store_slice(adm_addr)
       .store_dict(users)
     .end_cell());
   }
