@@ -35,11 +35,6 @@
   {
     slice addr = in_msg_body~load_msg_addr();
     slice share = in_msg_body~load_bits(32);
-
-    set_data(begin_cell()
-      .store_slice(adm_addr)
-      .store_dict(users)
-    .end_cell()); -}
   }
 
   elseif (op == 0x278205c8)
