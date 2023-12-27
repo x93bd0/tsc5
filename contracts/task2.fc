@@ -45,11 +45,13 @@
 
   elseif (op == 0x68530b3)
   {
+    throw_if(122, users.dict_empty?());
     accept_message();
   }
 
   elseif (op == 0x7362d09c)
   {
+    throw_if(122, users.dict_empty?());
     accept_message();
   }
 }
