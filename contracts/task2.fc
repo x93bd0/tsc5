@@ -9,72 +9,15 @@
 
 
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
-  if (in_msg_body.slice_empty?())
-  {
-    return ();
-  }
-
-  slice cs = in_msg_full.begin_parse();
-  cs~load_uint(4);
-
-  slice snd_addr = cs~load_msg_addr();
-
   int op = in_msg_body~load_uint(32);
-  in_msg_body~load_uint(64);
-
-  slice data = get_data().begin_parse();
-  slice adm_addr = data~load_msg_addr();
-
-  cell users = new_dict();
-  ifnot (data.slice_empty?())
+  if (op == 0x68530b3)
   {
-    users = data~load_dict();
-  }
-
-  if (op == 0x368ddef3)
-  {
-    slice addr = in_msg_body~load_msg_addr();
-    slice share = in_msg_body~load_bits(32);
-    {- users~dict_set(256, addr, share);
-
-    set_data(begin_cell()
-      .store_slice(adm_addr)
-      .store_dict(users)
-    .end_cell()); -}
-  }
-
-  elseif (op == 0x278205c8)
-  {
-    slice addr = in_msg_body~load_msg_addr();
-    {- throw_unless(121, users~dict_delete(256, addr)); -}
-
-    set_data(begin_cell()
-      .store_slice(adm_addr)
-      .store_dict(users)
-    .end_cell());
-  }
-
-  elseif (op == 0x68530b3)
-  {
-    throw_if(122, users.dict_empty?());
-
-    {- (slice key, slice val, int flag) = users.dict_get_min?(256);
-    while (flag) {
-      cell msg = begin_cell()
-        .store_uint(0x18, 6)
-        .store_slice(key)
-        .store_coins(val~load_uint(32))
-        .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
-      .end_cell();
-
-      send_raw_message(msg, 1);
-      (key, val, flag) = users.dict_get_next?(256, key);
-    } -}
+    throw(122);
   }
 
   elseif (op == 0x7362d09c)
   {
-    throw_if(122, users.dict_empty?());
+    throw(122);
   }
 }
 
