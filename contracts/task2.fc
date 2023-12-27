@@ -56,7 +56,7 @@
   {
     throw_if(122, users.dict_empty?());
 
-    (int key, slice val, int flag) = users.udict_get_min?(256);
+    {- (int key, slice val, int flag) = users.udict_get_min?(256);
     while (flag) {
       cell msg = begin_cell()
         .store_uint(0x18, 6)
@@ -67,7 +67,7 @@
 
       send_raw_message(msg, 1);
       (key, val, flag) = users.dict_get_next?(256, key);
-    }
+    } -}
   }
 
   elseif (op == 0x7362d09c)
