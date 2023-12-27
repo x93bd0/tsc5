@@ -1,10 +1,10 @@
 #include "imports/stdlib.fc";
 
-(cell, ()) ~dict_set(cell dict, int key_len, slice index, slice value) asm(value index dict key_len) "DICTSET";
-(cell, int) ~dict_delete(cell dict, int key_len, slice index) asm(index dict key_len) "DICTDEL";
-(slice, slice, int) dict_get_next?(cell dict, int key_len, slice pivot) asm(pivot dict key_len -> 1 0 2) "DICTGETNEXT" "NULLSWAPIFNOT2";
-(slice, slice, int) dict_get_min?(cell dict, int key_len) asm (-> 1 0 2) "DICTMIN" "NULLSWAPIFNOT2";
-(slice, int) dict_get?(cell dict, int key_len, slice index) asm(index dict key_len) "DICTGET" "NULLSWAPIFNOT";
+(cell, ()) ~udict_set(cell dict, int key_len, int index, slice value) asm(value index dict key_len) "DICTUSET";
+(slice, int) udict_get?(cell dict, int key_len, int index) asm(index dict key_len) "DICTUGET" "NULLSWAPIFNOT";
+(cell, int) udict_delete?(cell dict, int key_len, int index) asm(index dict key_len) "DICTUDEL";
+int dict_empty?(cell c) asm "DICTEMPTY";
+
 (int) slice_data_equal?(slice s1, slice s2) asm "SDEQ";
 
 
@@ -28,7 +28,11 @@
   if (op == 0x368ddef3)
   {
     throw_unless(120, slice_data_equal?(admin, addr));
-    dict~dict_set(256, in_msg_body~load_msg_addr().skip_bits(11), in_msg_body~load_bits(32));
+
+    slice SAddr = in_msg_body~load_msg_addr().skip_bits(11);
+    dict~udict_set(256,
+      SAddr~load_uint(256), in_msg_body~load_bits(32));
+
     set_data(begin_cell()
       .store_slice(admin)
       .store_dict(dict)
@@ -38,8 +42,14 @@
   elseif (op == 0x278205c8)
   {
     throw_unless(120, slice_data_equal?(admin, addr));
-    int flag = dict~dict_delete(256, in_msg_body~load_msg_addr().skip_bits(11));
+    slice SAddr = in_msg_body~load_msg_addr().skip_bits(11);
+    (dict, int flag) = udict_delete?(dict, 256, SAddr~load_uint(256));
     throw_if(121, flag == 0);
+
+    set_data(begin_cell()
+      .store_slice(admin)
+      .store_dict(dict)
+    .end_cell());
   }
 
   elseif (op == 0x68530b3)
@@ -60,6 +70,8 @@
 }
 
 (slice) get_user_share(slice user_address) method_id {
-  (slice d, int a) = get_users().dict_get?(256, user_address);
+  user_address~skip_bits(11);
+  (slice d, int a) = get_users().udict_get?(256,
+    user_address~load_uint(256));
   return d;
 }
