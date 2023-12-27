@@ -1,9 +1,9 @@
 #include "imports/stdlib.fc";
 
-(cell, ()) ~dict_set(cell dict, int key_len, slice index, slice value) asm(value index dict key_len) "DICTSET";
-(cell, int) ~dict_delete(cell dict, int key_len, slice index) asm(index dict key_len) "DICTDEL";
-(slice, slice, int) dict_get_next?(cell dict, int key_len, slice pivot) asm(pivot dict key_len -> 1 0 2) "DICTGETNEXT" "NULLSWAPIFNOT2";
-(slice, slice, int) dict_get_min?(cell dict, int key_len) asm (-> 1 0 2) "DICTMIN" "NULLSWAPIFNOT2";
+(cell, ()) ~udict_set(cell dict, int key_len, int index, slice value) asm(value index dict key_len) "DICTUSET";
+(cell, int) ~udict_delete(cell dict, int key_len, int index) asm(index dict key_len) "DICTUDEL";
+(int, slice, int) udict_get_next?(cell dict, int key_len, int pivot) asm(pivot dict key_len -> 1 0 2) "DICTUGETNEXT" "NULLSWAPIFNOT2";
+(int, slice, int) udict_get_min?(cell dict, int key_len) asm (-> 1 0 2) "DICTUMIN" "NULLSWAPIFNOT2";
 (int) slice_data_equal?(slice s1, slice s2) asm "SDEQ";
 
 
@@ -37,7 +37,7 @@
 
     slice addr = in_msg_body~load_msg_addr();
     slice share = in_msg_body~load_bits(32);
-    users~dict_set(256, addr, share);
+    users~udict_set(256, slice_hash(addr), share);
 
     set_data(begin_cell()
       .store_slice(adm_addr)
@@ -47,10 +47,9 @@
 
   elseif (op == 0x278205c8)
   {
-    throw_unless(120, slice_data_equal?(adm_addr, snd_addr));
     slice addr = in_msg_body~load_msg_addr();
     throw_unless(120, slice_data_equal?(adm_addr, snd_addr));
-    throw_unless(121, users~dict_delete(256, addr));
+    throw_unless(121, users~udict_delete(256, slice_hash(addr)));
     accept_message();
 
     set_data(begin_cell()
@@ -61,11 +60,10 @@
 
   elseif (op == 0x68530b3)
   {
-    throw_unless(120, slice_data_equal?(adm_addr, snd_addr));
     throw_if(122, users.dict_empty?());
     accept_message();
 
-    (slice key, slice val, int flag) = users.dict_get_min?(256);
+    {- (int key, slice val, int flag) = users.udict_get_min?(256);
     while (flag) {
       cell msg = begin_cell()
         .store_uint(0x18, 6)
@@ -76,7 +74,7 @@
 
       send_raw_message(msg, 1);
       (key, val, flag) = users.dict_get_next?(256, key);
-    }
+    } -}
   }
 
   elseif (op == 0x7362d09c)
