@@ -23,12 +23,7 @@
 
   slice data = get_data().begin_parse();
   slice adm_addr = data~load_msg_addr();
-
-  cell users = new_dict();
-  ifnot (data.slice_empty?())
-  {
-    users = data~load_dict();
-  }
+  cell users = data~load_dict();
 
   if (op == 0x368ddef3)
   {
@@ -45,7 +40,7 @@
     .end_cell());
   }
 
-  {- elseif (op == 0x278205c8)
+  elseif (op == 0x278205c8)
   {
     slice addr = in_msg_body~load_msg_addr();
     throw_unless(120, slice_data_equal?(adm_addr, snd_addr));
@@ -57,7 +52,7 @@
       .store_slice(adm_addr)
       .store_dict(users)
     .end_cell());
-  } -}
+  }
 
   elseif (op == 0x68530b3)
   {
