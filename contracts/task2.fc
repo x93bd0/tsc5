@@ -102,7 +102,7 @@ int dict_empty?(cell c) asm "DICTEMPTY";
       int share = val~load_uint(32);
       builder b = begin_cell()
         .store_uint(0x18, 6)
-        .store_slice(my_address())
+        .store_slice(admin)
         .store_coins(20000000)
         .store_uint(1, 107);
 
