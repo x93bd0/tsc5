@@ -62,7 +62,6 @@ solve (int n, int m, tuple maze) method_id
     ft~tpush(e);
   }
 
-{-
   ;; two pointer queue
   tuple queue = empty_tuple();
   int s = 0; int e = 0; int c = 0;
@@ -88,6 +87,7 @@ solve (int n, int m, tuple maze) method_id
     i -= 1;
   }
 
+{-
   (s, e, c) = tpm(queue, s, e, c, ((sy * n) + sx) << 32);
   while (c > 0)
   {
