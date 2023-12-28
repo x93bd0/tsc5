@@ -145,3 +145,5 @@ int dict_empty?(cell c) asm "DICTEMPTY";
     user_address~load_uint(256));
   return d~load_uint(32);
 }
+
+;;
