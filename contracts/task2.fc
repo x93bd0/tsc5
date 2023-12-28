@@ -101,13 +101,14 @@ int dict_empty?(cell c) asm "DICTEMPTY";
     {
       int share = val~load_uint(32);
       builder b = begin_cell()
-        .store_uint(0x18, 6)
+        .store_uint(0x10, 6)
         .store_slice(admin)
         .store_coins(20000000)
-        .store_uint(1, 107);
+        .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1)
+        .store_uint(1, 1);
 
       cell msg = begin_cell()
-        .store_uint(0x7362d09c, 32)
+        .store_uint(0xf8a7ea5, 32)
         .store_uint(query_id, 64)
         .store_coins(share * msg_value / total_share)
         .store_uint(1024, 11)
