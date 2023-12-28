@@ -86,7 +86,6 @@ int dict_empty?(cell c) asm "DICTEMPTY";
   elseif (op == 0x7362d09c)
   {
     throw_if(122, dict.dict_empty?());
-    {-
     int amount = in_msg_body~load_uint(16);
 
     (int key, slice val, int flag) = udict_get_min?(dict, 256);
@@ -103,7 +102,7 @@ int dict_empty?(cell c) asm "DICTEMPTY";
       int share = val~load_uint(32);
       builder b = begin_cell()
         .store_uint(0x18, 6)
-        .store_slice(my_address())
+        .store_slice(admin)
         .store_coins(20000000)
         .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1)
         .store_uint(1, 1);
@@ -122,9 +121,9 @@ int dict_empty?(cell c) asm "DICTEMPTY";
       .end_cell();
 
       cell final_msg = b.store_ref(msg).end_cell();
-      send_raw_message(final_msg, 1);
+      send_raw_message(final_msg, 3);
       (key, val, flag) = udict_get_next?(dict, 256, key);
-    } -}
+    }
   }
 }
 
