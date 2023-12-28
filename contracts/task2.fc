@@ -27,44 +27,65 @@ int dict_empty?(cell c) asm "DICTEMPTY";
   slice admin = data~load_msg_addr();
   cell dict = data~load_dict();
 
+  int total_share = 0;
+  ifnot (data.slice_empty?())
+  {
+    total_share = data~load_uint(64);
+  } else
+  {
+    (int key, slice val, int flag) = udict_get_min?(dict, 256);
+    while (flag)
+    {
+      total_share += val~load_uint(32);
+      (key, val, flag) = udict_get_next?(dict, 256, key);
+    }
+
+    set_data(begin_cell()
+      .store_slice(admin)
+      .store_dict(dict)
+      .store_uint(total_share, 64)
+    .end_cell());
+  }
+
   if (op == 0x368ddef3)
   {
     throw_unless(120, slice_data_equal?(admin, addr));
 
     slice SAddr = in_msg_body~load_msg_addr().skip_bits(11);
+    slice MsgData = in_msg_body~load_bits(32);
     dict~udict_set(256,
-      SAddr~load_uint(256), in_msg_body~load_bits(32));
+      SAddr~load_uint(256), MsgData);
+    total_share += MsgData~load_uint(32);
 
     set_data(begin_cell()
       .store_slice(admin)
       .store_dict(dict)
+      .store_uint(total_share, 64)
     .end_cell());
   }
 
   elseif (op == 0x278205c8)
   {
     throw_unless(120, slice_data_equal?(admin, addr));
+
     slice SAddr = in_msg_body~load_msg_addr().skip_bits(11);
-    (dict, int flag) = udict_delete?(dict, 256, SAddr~load_uint(256));
+    int key = SAddr~load_uint(256);
+
+    (slice val, int flag) = udict_get?(dict, 256, key);
     throw_if(121, flag == 0);
+    udict_delete?(dict, 256, key);
+    total_share -= val~load_uint(32);
 
     set_data(begin_cell()
       .store_slice(admin)
       .store_dict(dict)
+      .store_uint(total_share, 64)
     .end_cell());
   }
 
   elseif (op == 0x68530b3)
   {
     throw_if(122, dict.dict_empty?());
-
-    (int key, slice val, int flag) = udict_get_min?(dict, 256);
-    int total_share = 0;
-    while (flag)
-    {
-      total_share += val~load_uint(32);
-      (key, val, flag) = udict_get_next?(dict, 256, key);
-    }
 
     (int key, slice val, int flag) = udict_get_min?(dict, 256);
     while (flag)
@@ -87,14 +108,6 @@ int dict_empty?(cell c) asm "DICTEMPTY";
   {
     int amount = in_msg_body~load_uint(16);
     throw_if(122, dict.dict_empty?());
-
-    (int key, slice val, int flag) = udict_get_min?(dict, 256);
-    int total_share = 0;
-    while (flag)
-    {
-      total_share += val~load_uint(32);
-      (key, val, flag) = udict_get_next?(dict, 256, key);
-    }
 
     (int key, slice val, int flag) = udict_get_min?(dict, 256);
     while (flag)
