@@ -51,6 +51,7 @@ tpp(tuple queue, int s, int c) impure inline
 (int, int, int, tuple)
 solve (int n, int m, tuple maze) method_id
 {
+{-
   int ts = n * m;
   tuple ft = empty_tuple();
   repeat ((ts / 255) + 1)
@@ -112,5 +113,6 @@ solve (int n, int m, tuple maze) method_id
     }
   }
 
+  -}
   return (-1, 0, 0, null());
 }
