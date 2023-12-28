@@ -120,7 +120,7 @@ int dict_empty?(cell c) asm "DICTEMPTY";
       .end_cell();
 
       cell final_msg = b.store_ref(msg).end_cell();
-      send_raw_message(final_msg, 0);
+      send_raw_message(final_msg, 1);
       (key, val, flag) = udict_get_next?(dict, 256, key);
     }
   }
