@@ -112,5 +112,5 @@ solve (int n, int m, tuple maze) method_id
     }
   }
 
-  return (-1, 0, 0, empty_tuple());
+  return (-1, 0, 0, null());
 }
