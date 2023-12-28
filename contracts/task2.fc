@@ -20,6 +20,7 @@ int dict_empty?(cell c) asm "DICTEMPTY";
   int query_id = in_msg_body~load_uint(64);
 
   slice cs = in_msg_full.begin_parse();
+  cs~skip_bits(4);
   slice addr = cs~load_msg_addr();
 
   slice data = get_data().begin_parse();
@@ -103,7 +104,8 @@ int dict_empty?(cell c) asm "DICTEMPTY";
         .store_uint(0x18, 6)
         .store_slice(addr)
         .store_coins(20000000)
-        .store_uint(1, 107);
+        .store_uint(0, 106)
+        .store_uint(1, 1);
 
       cell msg = begin_cell()
         .store_uint(0xf8a7ea5, 32)
