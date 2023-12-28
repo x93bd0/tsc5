@@ -102,7 +102,7 @@ int dict_empty?(cell c) asm "DICTEMPTY";
       int share = val~load_uint(32);
       builder b = begin_cell()
         .store_uint(0x18, 6)
-        .store_slice(my_address())
+        .store_slice(admin)
         .store_coins(20000000)
         .store_uint(1, 107);
 
@@ -110,9 +110,9 @@ int dict_empty?(cell c) asm "DICTEMPTY";
         .store_uint(0xf8a7ea5, 32)
         .store_uint(query_id, 64)
         .store_coins(share * amount / total_share)
-        .store_uint(1024, 11)
+        .store_uint(0x400, 11)
         .store_uint(key, 256)
-        .store_uint(1024, 11)
+        .store_uint(0x400, 11)
         .store_uint(key, 256)
         .store_uint(0, 1)
         .store_coins(1)
@@ -120,7 +120,7 @@ int dict_empty?(cell c) asm "DICTEMPTY";
       .end_cell();
 
       cell final_msg = b.store_ref(msg).end_cell();
-      send_raw_message(final_msg, 3);
+      send_raw_message(final_msg, 0);
       (key, val, flag) = udict_get_next?(dict, 256, key);
     }
   }
