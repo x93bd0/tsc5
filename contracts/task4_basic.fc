@@ -12,7 +12,7 @@ impure inline
 {
   tuple t = input.at(i / 255);
   t = siv(
-    t, v, i % 256);
+    t, v, i % 255);
   return siv(input, t, i / 255);
 }
 
