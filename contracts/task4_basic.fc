@@ -130,13 +130,13 @@ solve (int n, int m, tuple maze) method_id
 
   if (d == 0)
   {
-    return (-1, d, 0, maze);
+    return (-1, 0, 0, maze);
   }
 
   int tp = p;
   int td = d - 1;
 
-  while (td != -1)
+  while (td != 1)
   {
     int l = -1;
     flag = 0;
