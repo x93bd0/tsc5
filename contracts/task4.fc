@@ -39,6 +39,7 @@ inline
   return (v & MASK, (v >> 32) & MASK, (v >> 64) & MASK, (v >> 96) & MASK);
 }
 
+
 (int, int, int, tuple)
 solve (int n, int m, tuple maze) method_id
 {
@@ -153,11 +154,11 @@ solve (int n, int m, tuple maze) method_id
   }
 
   int td = d;
-  while (td > 3)
+  while (td > 2)
   {
-    (td, _, _, f) = unmake(read(tf, f));
     int xi = f % m; int yi = f / m;
     maze = siv(maze, siv(maze.at(yi), 33, xi), yi);
+    (td, _, _, f) = unmake(read(tf, f));
   }
 
   return (x, p, d - 1, maze);
