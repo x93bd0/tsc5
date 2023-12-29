@@ -1,6 +1,6 @@
 #include "imports/stdlib.fc";
 
-const MASK = 0xffffffff;
+const MASK = 0xffff;
 
 forall X -> (tuple) to_tuple (X x) asm "NOP";
 forall X -> tuple siv(tuple t, X value, int position) asm "SETINDEXVAR";
@@ -29,21 +29,21 @@ inline
 make (int d, int p, int x, int f)
 inline
 {
-  return (f << 96) + (x << 64) + (p << 32) + d;
+  return (f << 48) + (x << 32) + (p << 16) + d;
 }
 
 (int, int, int, int)
 unmakef (int v)
 inline
 {
-  return (v & MASK, (v >> 32) & MASK, (v >> 64) & MASK, (v >> 96) & MASK);
+  return (v & MASK, (v >> 16) & MASK, (v >> 32) & MASK, (v >> 48) & MASK);
 }
 
 (int, int, int)
 unmake (int v)
 inline
 {
-  return (v & MASK, (v >> 32) & MASK, (v >> 64) & MASK);
+  return (v & MASK, (v >> 16) & MASK, (v >> 32) & MASK);
 }
 
 
@@ -128,9 +128,22 @@ solve (int n, int m, tuple maze) method_id
               int ext = pos == 63 ? 1 : 0;
               int ext2 = pos == 88 ? 1 : 0;
 
-              if (ud == 0) | (xx + ext2 < ux) | (xp + ext < up) | ((xp + ext == up) & (xd + 1 < ud))
+              if (ud == 0)
               {
                 tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
+              }
+              elseif (xx + ext2 < ux)
+              {
+                tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
+              } elseif (xx + ext2 == ux)
+              {
+                if (xp + ext < up)
+                {
+                  tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
+                } elseif (xp + ext == up) & (xd + 1 < up)
+                {
+                  tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
+                }
               }
             } r += 1;
           } l += 1;
@@ -152,7 +165,7 @@ solve (int n, int m, tuple maze) method_id
     int xi = f % m; int yi = f / m;
     maze = siv(maze, siv(maze.at(yi), 33, xi), yi);
     int temp = read(tf, f);
-    (td, f) = (temp & MASK, (temp >> 96) & MASK);
+    (td, f) = (temp & MASK, (temp >> 48) & MASK);
   }
 
   return (x, p, d - 1, maze);
