@@ -29,8 +29,16 @@ make (int d, int p)
 }
 
 (int, int, int, tuple)
-solve (int n, int m, tuple maze) method_id
+solve () method_id
 {
+  int n = 2;
+  int m = 2;
+
+  tuple maze = to_tuple([
+    to_tuple([83, 69]),
+    to_tuple([88, 88])
+  ]);
+
   int ts = n * m;
   tuple tf = empty_tuple();
 
