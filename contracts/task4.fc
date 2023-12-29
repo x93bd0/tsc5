@@ -1,5 +1,200 @@
 #include "imports/stdlib.fc";
 
-() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+const MASK = 0xffffffff;
 
+forall X -> (tuple) to_tuple (X x) asm "NOP";
+forall X -> tuple siv(tuple t, X value, int position) asm "SETINDEXVAR";
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+  
+}
+
+(tuple)
+edit(tuple input, int i, int v)
+impure inline
+{
+  tuple t = input.at(i / 255);
+  t = siv(
+    t, v, i % 255);
+  return siv(input, t, i / 255);
+}
+
+(int)
+read(tuple input, int i)
+inline
+{
+  return input.at(i / 255).at(i % 255);
+}
+
+(int)
+make (int d, int p, int x)
+inline
+{
+  return (x << 64) + (p << 32) + d;
+}
+
+(int, int, int)
+unmake (int v)
+inline
+{
+  return (v & MASK, (v >> 32) & MASK, (v >> 64) & MASK);
+}
+
+(int, int, int, tuple)
+solve (int n, int m, tuple maze) method_id
+{
+  int ts = n * m;
+  tuple tf = empty_tuple();
+
+  repeat ((ts / 255) + 1)
+  {
+    tuple temp = empty_tuple();
+    repeat (255)
+    {
+      temp~tpush(0);
+    }
+
+    tf~tpush(temp);
+  }
+
+  int i = 0; int flag = 0;
+  int sx = 0; int sy = 0;
+  int ex = 0; int ey = 0;
+
+  while (i < n) & (flag < 2)
+  {
+    tuple t = maze.at(i);
+    int j = 0;
+
+    while (j < m) & (flag < 2)
+    {
+      if (t.at(j) == 83)
+      {
+        sx = j; sy = i;
+        flag += 1;
+      } elseif (t.at(j) == 69)
+      {
+        ex = j; ey = i;
+        flag += 1;
+      }
+
+      j += 1;
+    } i += 1;
+  }
+
+  tf = edit(tf, sy * m + sx, make(1, 0, 0));
+  flag = 0;
+  int ind = 1;
+
+  while (flag == 0)
+  {
+    i = 0;
+    int f = 0;
+
+    while (i < n * m)
+    {
+      int x = read(tf, i);
+      (int xd, int xp, int xx) = unmake(x);
+
+      if (xd == ind)
+      {
+        f = 1;
+        int ix = i % m;
+        int iy = i / m;
+
+        int l = -1;
+        while (l != 2)
+        {
+          int r = -1;
+          while (r != 2)
+          {
+            if (~((r == l) & (r == 0))) &
+                (l + ix >= 0) &
+                (l + ix <  m) &
+                (r + iy >= 0) &
+                (r + iy <  n)
+            {
+              int u = read(tf, (r + iy) * m + (l + ix));
+              (int ud, int up, int ux) = unmake(u);
+
+              int pos = maze.at(r + iy).at(l + ix);
+              int ext = pos == 63 ? 1 : 0;
+              int ext2 = pos == 88 ? 1 : 0;
+
+              if (xx + ext2 < ux)
+              {
+                tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2));
+              } elseif (xx + ext2 == ux) & (xp + ext < up)
+              {
+                tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2));
+              } elseif (xx + ext2 == ux) & (xp + ext == up) & (ud > xd + 1)
+              {
+                tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2));
+              } elseif (ud == 0) & ((pos == 63) | (pos == 46) | (pos == 69) | (pos == 88))
+              {
+                tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2));
+              }
+            } r += 1;
+          } l += 1;
+        }
+      } i += 1;
+    }
+
+    if (f == 0) {
+      flag = 1;
+    } ind += 1;
+  }
+
+  int raw = read(tf, ey * m + ex);
+  (int d, int p, int x) = unmake(raw);
+
+  if (d == 0)
+  {
+    return (-1, 0, 0, null());
+  }
+
+  int tp = p;
+  int td = d - 1;
+  int tx = x;
+
+  while (td != 1)
+  {
+    int l = -1;
+    flag = 0;
+
+    while (l != 2) & (flag == 0)
+    {
+      int r = -1;
+
+      while (r != 2) & (flag == 0)
+      {
+        if (~((r == l) & (r == 0))) &
+            (l + ex >= 0) &
+            (l + ex <  m) &
+            (r + ey >= 0) &
+            (r + ey <  n)
+        {
+          int u = read(tf, (r + ey) * m + (l + ex));
+          (int ud, int up, int ux) = unmake(u);
+
+          if (ud == td) & (up == tp) & (ux == tx)
+          {
+            if (maze.at(r + ey).at(l + ex) == 63)
+            {
+              tp -= 1;
+            } elseif (maze.at(r + ey).at(l + ex) == 88)
+            {
+              tx -= 1;
+            } td -= 1;
+
+            maze = siv(maze, siv(maze.at(r + ey), 33, l + ex), r + ey);
+            flag = 1;
+            ex += l;
+            ey += r;
+          }
+        } r += 1;
+      } l += 1;
+    }
+  }
+
+  return (x, p, d - 1, maze);
 }
