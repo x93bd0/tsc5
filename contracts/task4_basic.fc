@@ -1,5 +1,6 @@
 #include "imports/stdlib.fc";
 
+forall X -> (tuple) to_tuple (X x) asm "NOP";
 forall X -> tuple siv(tuple t, X value, int position) asm "SETINDEXVAR";
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
   
@@ -9,16 +10,16 @@ forall X -> tuple siv(tuple t, X value, int position) asm "SETINDEXVAR";
 edit(tuple input, int i, int v)
 impure inline
 {
-  tuple t = input.at(i / 256);
+  tuple t = input.at(i / 255);
   t = siv(
     t, v, i % 256);
-  return siv(input, t, i / 256);
+  return siv(input, t, i / 255);
 }
 
 (int)
 read(tuple input, int i)
 {
-  return input.at(i / 256).at(i % 256);
+  return input.at(i / 255).at(i % 255);
 }
 
 (int)
@@ -28,15 +29,29 @@ make (int d, int p)
 }
 
 (int, int, int, tuple)
-solve (int n, int m, tuple maze) method_id
+solve () method_id
 {
+  tuple maze = to_tuple([
+    to_tuple([83, 88, 46, 63, 88]),
+    to_tuple([46, 88, 88, 46, 88]),
+    to_tuple([88, 46, 63, 46, 46]),
+    to_tuple([46, 63, 63, 46, 46]),
+    to_tuple([88, 63, 46, 46, 46]),
+    to_tuple([46, 46, 88, 46, 88]),
+    to_tuple([46, 46, 63, 46, 46]),
+    to_tuple([88, 46, 46, 46, 69])
+  ]);
+
+  int n = 8;
+  int m = 5;
+
   int ts = n * m;
   tuple tf = empty_tuple();
 
-  repeat ((ts / 256) + 1)
+  repeat ((ts / 255) + 1)
   {
     tuple temp = empty_tuple();
-    repeat (256)
+    repeat (255)
     {
       temp~tpush(0);
     }
@@ -110,8 +125,16 @@ solve (int n, int m, tuple maze) method_id
               if (ud == xd) & (xp + 1 < up) & (pos == 63)
               {
                 tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + 1));
+              } elseif (ud == xd) & (xp < up) & (maze.at(r + iy).at(l + ix) != 63) {
+                tf = edit(tf, (r + iy) * m + (l + ix), make(xd, xp));
               } elseif (ud == 0) & ((pos == 63) | (pos == 46) | (pos == 69)) {
-                tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + (pos == 63 ? 1 : 0)));
+                int ext = 0;
+                if (pos == 63)
+                {
+                  ext = 1;
+                }
+
+                tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext));
               }
             } r += 1;
           } l += 1;
@@ -123,6 +146,7 @@ solve (int n, int m, tuple maze) method_id
       flag = 1;
     } ind += 1;
   }
+
 
   int raw = read(tf, ey * m + ex);
   int d = raw & 0xffffffff;
@@ -157,14 +181,14 @@ solve (int n, int m, tuple maze) method_id
           int ud = u & 0xffffffff;
           int up = u >> 32;
 
-          if (ud == td) & (up == p)
+          if (ud == td) & (up == tp)
           {
             if (maze.at(r + ey).at(l + ex) == 63)
             {
               tp -= 1;
             } td -= 1;
 
-            maze = siv(maze, siv(maze.at(r + ey), l + ex, 33), r + ey);
+            maze = siv(maze, siv(maze.at(r + ey), 33, l + ex), r + ey);
             flag = 1;
             ex += l;
             ey += r;
