@@ -140,7 +140,7 @@ solve (int n, int m, tuple maze) method_id
 
   if (d == 0)
   {
-    return (-1, 0, 0, maze);
+    return (-1, 0, 0, null());
   }
 
   int tp = p;
