@@ -128,11 +128,7 @@ solve (int n, int m, tuple maze) method_id
               int ext = pos == 63 ? 1 : 0;
               int ext2 = pos == 88 ? 1 : 0;
 
-              if (
-                (ud == 0) & (pos != 83)) |
-                (xx + ext2 < ux) |
-                ((xx + ext2 == ux) & (xp + ext < up)) | 
-                ((xx + ext2 == ux) & (xp + ext == up) & (xd + 1 < ud))
+              if (ud == 0) | (xx + ext2 < ux) | (xp + ext < up) | ((xp + ext == up) & (xd + 1 < ud))
               {
                 tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
               }
