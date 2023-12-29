@@ -153,11 +153,9 @@ solve (int n, int m, tuple maze) method_id
   }
 
   int td = d;
-
-  int S = sy * m + sx;
-  while (td != 2)
+  while (td > 3)
   {
-    (td, _, _, f) = unmake(f);
+    (td, _, _, f) = unmake(read(tf, f));
     int xi = f % m; int yi = f / m;
     maze = siv(maze, siv(maze.at(yi), 33, xi), yi);
   }
