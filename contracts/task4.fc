@@ -33,10 +33,17 @@ inline
 }
 
 (int, int, int, int)
-unmake (int v)
+unmakef (int v)
 inline
 {
   return (v & MASK, (v >> 32) & MASK, (v >> 64) & MASK, (v >> 96) & MASK);
+}
+
+(int, int, int)
+unmake (int v)
+inline
+{
+  return (v & MASK, (v >> 32) & MASK, (v >> 64) & MASK);
 }
 
 
@@ -94,7 +101,7 @@ solve (int n, int m, tuple maze) method_id
     while (i < n * m)
     {
       int x = read(tf, i);
-      (int xd, int xp, int xx, _) = unmake(x);
+      (int xd, int xp, int xx) = unmake(x);
 
       if (xd == ind)
       {
@@ -115,7 +122,7 @@ solve (int n, int m, tuple maze) method_id
                 (r + iy <  n)
             {
               int u = read(tf, (r + iy) * m + (l + ix));
-              (int ud, int up, int ux, _) = unmake(u);
+              (int ud, int up, int ux) = unmake(u);
 
               int pos = maze.at(r + iy).at(l + ix);
               int ext = pos == 63 ? 1 : 0;
@@ -146,19 +153,15 @@ solve (int n, int m, tuple maze) method_id
   }
 
   int raw = read(tf, ey * m + ex);
-  (int d, int p, int x, int f) = unmake(raw);
-
-  if (d == 0)
-  {
-    return (-1, 0, 0, null());
-  }
+  (int d, int p, int x, int f) = unmakef(raw);
 
   int td = d;
   while (td > 2)
   {
     int xi = f % m; int yi = f / m;
     maze = siv(maze, siv(maze.at(yi), 33, xi), yi);
-    (td, _, _, f) = unmake(read(tf, f));
+    int temp = read(tf, f);
+    (td, f) = (temp & MASK, (temp >> 96) & MASK);
   }
 
   return (x, p, d - 1, maze);
