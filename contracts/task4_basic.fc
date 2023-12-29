@@ -29,16 +29,8 @@ make (int d, int p)
 }
 
 (int, int, int, tuple)
-solve () method_id
+solve (int n, int m, tuple maze) method_id
 {
-  int n = 2;
-  int m = 2;
-
-  tuple maze = to_tuple([
-    to_tuple([83, 69]),
-    to_tuple([88, 88])
-  ]);
-
   int ts = n * m;
   tuple tf = empty_tuple();
 
@@ -115,12 +107,13 @@ solve () method_id
               int ud = u & 0xffffffff;
               int up = u >> 32;
 
+              ;;} elseif (ud == xd) & (xp < up) & (maze.at(r + iy).at(l + ix) != 63) {
+              ;;  tf = edit(tf, (r + iy) * m + (l + ix), make(xd, xp));
+
               int pos = maze.at(r + iy).at(l + ix);
               if (ud == xd) & (xp + 1 < up) & (pos == 63)
               {
                 tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + 1));
-              } elseif (ud == xd) & (xp < up) & (maze.at(r + iy).at(l + ix) != 63) {
-                tf = edit(tf, (r + iy) * m + (l + ix), make(xd, xp));
               } elseif (ud == 0) & ((pos == 63) | (pos == 46) | (pos == 69)) {
                 int ext = 0;
                 if (pos == 63)
