@@ -184,5 +184,5 @@ solve (int n, int m, tuple maze) method_id
     }
   }
 
-  return (-1, d - 1, p, maze);
+  return (-1, p, d - 1, maze);
 }
