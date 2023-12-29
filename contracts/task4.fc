@@ -128,18 +128,22 @@ solve (int n, int m, tuple maze) method_id
               int ext = pos == 63 ? 1 : 0;
               int ext2 = pos == 88 ? 1 : 0;
 
-              if (xx + ext2 < ux)
+              if (ud == 0)
               {
                 tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
-              } elseif (xx + ext2 == ux) & (xp + ext < up)
+              }
+              elseif (xx + ext2 < ux)
               {
                 tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
-              } elseif (xx + ext2 == ux) & (xp + ext == up) & (ud > xd + 1)
+              } elseif (xx + ext2 == ux)
               {
-                tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
-              } elseif (ud == 0) & ((pos == 63) | (pos == 46) | (pos == 69) | (pos == 88))
-              {
-                tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
+                if (xp + ext < up)
+                {
+                  tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
+                } elseif (xp + ext == up) & (xd + 1 < up)
+                {
+                  tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
+                }
               }
             } r += 1;
           } l += 1;
