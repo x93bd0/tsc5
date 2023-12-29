@@ -26,17 +26,17 @@ inline
 }
 
 (int)
-make (int d, int p, int x)
+make (int d, int p, int x, int f)
 inline
 {
-  return (x << 64) + (p << 32) + d;
+  return (f << 96) + (x << 64) + (p << 32) + d;
 }
 
-(int, int, int)
+(int, int, int, int)
 unmake (int v)
 inline
 {
-  return (v & MASK, (v >> 32) & MASK, (v >> 64) & MASK);
+  return (v & MASK, (v >> 32) & MASK, (v >> 64) & MASK, (f >> 96) & MASK);
 }
 
 (int, int, int, tuple)
@@ -93,7 +93,7 @@ solve (int n, int m, tuple maze) method_id
     while (i < n * m)
     {
       int x = read(tf, i);
-      (int xd, int xp, int xx) = unmake(x);
+      (int xd, int xp, int xx, _) = unmake(x);
 
       if (xd == ind)
       {
@@ -114,7 +114,7 @@ solve (int n, int m, tuple maze) method_id
                 (r + iy <  n)
             {
               int u = read(tf, (r + iy) * m + (l + ix));
-              (int ud, int up, int ux) = unmake(u);
+              (int ud, int up, int ux, _) = unmake(u);
 
               int pos = maze.at(r + iy).at(l + ix);
               int ext = pos == 63 ? 1 : 0;
@@ -122,16 +122,16 @@ solve (int n, int m, tuple maze) method_id
 
               if (xx + ext2 < ux)
               {
-                tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2));
+                tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
               } elseif (xx + ext2 == ux) & (xp + ext < up)
               {
-                tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2));
+                tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
               } elseif (xx + ext2 == ux) & (xp + ext == up) & (ud > xd + 1)
               {
-                tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2));
+                tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
               } elseif (ud == 0) & ((pos == 63) | (pos == 46) | (pos == 69) | (pos == 88))
               {
-                tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2));
+                tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
               }
             } r += 1;
           } l += 1;
@@ -145,55 +145,21 @@ solve (int n, int m, tuple maze) method_id
   }
 
   int raw = read(tf, ey * m + ex);
-  (int d, int p, int x) = unmake(raw);
+  (int d, int p, int x, int f) = unmake(raw);
 
   if (d == 0)
   {
     return (-1, 0, 0, null());
   }
 
-  int tp = p;
-  int td = d - 1;
-  int tx = x;
+  int td = d;
 
-  while (td != 1)
+  int S = sy * m + sx;
+  while (td != 2)
   {
-    int l = -1;
-    flag = 0;
-
-    while (l != 2) & (flag == 0)
-    {
-      int r = -1;
-
-      while (r != 2) & (flag == 0)
-      {
-        if (~((r == l) & (r == 0))) &
-            (l + ex >= 0) &
-            (l + ex <  m) &
-            (r + ey >= 0) &
-            (r + ey <  n)
-        {
-          int u = read(tf, (r + ey) * m + (l + ex));
-          (int ud, int up, int ux) = unmake(u);
-
-          if (ud == td) & (up == tp) & (ux == tx)
-          {
-            if (maze.at(r + ey).at(l + ex) == 63)
-            {
-              tp -= 1;
-            } elseif (maze.at(r + ey).at(l + ex) == 88)
-            {
-              tx -= 1;
-            } td -= 1;
-
-            maze = siv(maze, siv(maze.at(r + ey), 33, l + ex), r + ey);
-            flag = 1;
-            ex += l;
-            ey += r;
-          }
-        } r += 1;
-      } l += 1;
-    }
+    (td, _, _, f) = unmake(f);
+    int xi = f % m; int yi = f / m;
+    maze = siv(maze, siv(maze.at(yi), 33, xi), yi);
   }
 
   return (x, p, d - 1, maze);
