@@ -36,7 +36,7 @@ inline
 unmake (int v)
 inline
 {
-  return (v & MASK, (v >> 32) & MASK, (v >> 64) & MASK, (f >> 96) & MASK);
+  return (v & MASK, (v >> 32) & MASK, (v >> 64) & MASK, (v >> 96) & MASK);
 }
 
 (int, int, int, tuple)
@@ -81,7 +81,7 @@ solve (int n, int m, tuple maze) method_id
     } i += 1;
   }
 
-  tf = edit(tf, sy * m + sx, make(1, 0, 0));
+  tf = edit(tf, sy * m + sx, make(1, 0, 0, 0));
   flag = 0;
   int ind = 1;
 
