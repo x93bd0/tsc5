@@ -109,11 +109,11 @@ solve (int n, int m, tuple maze) method_id
 
 
               int pos = maze.at(r + iy).at(l + ix);
-              if (ud == xd + 1) & (xp + 1 < up) & (pos == 63)
+              if (ud >= xd + 1) & (xp + 1 < up) & (pos == 63)
               {
                 tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + 1));
-              } elseif (ud == xd + 1) & (xp < up) & (maze.at(r + iy).at(l + ix) != 63) {
-                tf = edit(tf, (r + iy) * m + (l + ix), make(xd, xp));
+              } elseif (ud >= xd + 1) & (xp < up) & (maze.at(r + iy).at(l + ix) != 63) {
+                tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp));
               } elseif (ud == 0) & ((pos == 63) | (pos == 46) | (pos == 69)) {
                 int ext = 0;
                 if (pos == 63)
