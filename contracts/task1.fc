@@ -21,7 +21,8 @@ int now() asm "NOW";
   s1 PUSH               // push rop1    (rop1, rop2, rop1)
   OR                    // compare      (rop1, r1o2)
 
-  IFNOT <{
+  IFNOT <{              // if           (rop1)
+    DROP                // drop rop1    ()
     RET
   }>
 
