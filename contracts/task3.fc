@@ -56,6 +56,5 @@ int version() method_id {
     return ();
   }
 
-  cell ec = in_msg_body~load_ref();
-  throw_if(200, cell_null?(ec));
+  throw(400);
 }
