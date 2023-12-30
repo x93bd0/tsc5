@@ -1,5 +1,6 @@
 #include "imports/stdlib.fc";
 ;; a
+
 () send_raw_message(cell msg, int mode) impure asm "SENDRAWMSG";
 int check_signature(int hash, slice signature, int public_key) asm "CHKSIGNU";
 int slice_hash(slice s) asm "HASHSU";
