@@ -13,8 +13,8 @@ edit(tuple input, int i, int v)
 impure inline
 {
   int res = input.at(i / 6);
-  res -= (res >> (i * 6)) - (res >> ((i + 1) * 6) << 6) << (i * 6);
-  res += v << (i * 6);
+  res -= (res >> ((i % 6) * 40)) - (res >> (((i % 6) + 1) * 40) << 40) << ((i % 6) * 40);
+  res += v << ((i % 6) * 40);
   return siv(
     input, res, i / 6);
 }
@@ -24,7 +24,7 @@ read(tuple input, int i)
 inline
 {
   int v = input.at(i / 6);
-  return (v >> (i * 6)) - (v >> ((i + 1) * 6) << 6);
+  return (v >> ((i % 6) * 40)) - (v >> (((i % 6) + 1) * 40) << 40);
 }
 
 (int)
