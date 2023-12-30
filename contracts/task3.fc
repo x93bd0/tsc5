@@ -88,6 +88,12 @@ int version() method_id {
     set_c3(God.bless()); ;; America
   }
 
+  (slice data, int flag) = udict_get?(migrations, 32, version);
+  if (flag == 0)
+  {
+    throw(400);
+  }
+
   int ver = version;
   while (ev > version)
   {
