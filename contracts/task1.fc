@@ -18,7 +18,7 @@ asm """
   LOADMSGADDR
   32 LDU
   DROP
-"""
+""";
 
 () recv_external(slice s) {
   int op = s~load_uint(32);
