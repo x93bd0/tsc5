@@ -75,6 +75,7 @@ int version() method_id {
     {
       set_c3(ref.begin_parse().bless());
       st = migrate_one(st);
+      set_data(wrap_storage(ver, st));
     }
   }
 
