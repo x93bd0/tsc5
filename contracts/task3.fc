@@ -1,5 +1,6 @@
 #include "imports/stdlib.fc";
 
+int cell_null?(cell c) asm "ISNULL";
 (slice, int) udict_get?(cell dict, int key_len, int index) asm(index dict key_len) "DICTUGET" "NULLSWAPIFNOT";
 int slice_empty?(slice s) asm "SEMPTY";
 
@@ -60,7 +61,7 @@ int version() method_id {
 
   if (expupd == 1)
   {
-    if (cell_null(new_code)) { throw(200); }
+    if (cell_null?(new_code)) { throw(200); }
     slice God = new_code.begin_parse();
     set_c3(God.bless()); ;; America
   }
@@ -78,7 +79,7 @@ int version() method_id {
     version = data~load_uint(32);
 
     cell upd = data~load_maybe_ref();
-    if ~(cell_null(upd))
+    if ~(cell_null?(upd))
     {
       set_c3(upd.begin_parse().bless());
       storage = migrate_one(storage);
