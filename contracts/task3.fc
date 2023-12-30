@@ -1,39 +1,5 @@
 #include "imports/stdlib.fc";
 
-cell get_storage() {
-  slice cs = get_data().begin_parse();
-  cell storage = cs~load_ref();
-  return storage;
-}
-
-cell wrap_storage(int version_id, cell storage) {
-  return begin_cell()
-    .store_uint(version_id, 32)
-    .store_ref(storage)
-  .end_cell();
-}
-
-int version() method_id {
-  (_, int res) = get_data().begin_parse().load_uint(32);
-  return res;
-}
-
-() recv_internal(int msg_value, int balance, cell in_msg_full, slice in_msg_body) impure {
-  int ev = in_msg_body~load_uint(32);
-  cell new_code = in_msg_body~load_maybe_ref();
-  cell migrations = in_msg_body~load_dict();
-  cell payload = in_msg_body~load_ref();
-
-  if (ev == 0)
-  {
-    cell storage = get_storage();
-    set_data(wrap_storage(0, storage));
-    return ();
-  }
-
-  process_message(get_storage(), msg_value, balance, in_msg_full, payload.begin_parse());
-}
-
 ;; <<<<< Custom version-specific code begins
 ;; This section (everything between << and >> characters) will be fully substituted for each version.
 ;; This is an IMPORTANT part, and these exact lines with <<<<< and >>>>> must be present in your code for the testing system to work correctly.
@@ -52,3 +18,39 @@ cell migrate_one(cell old_storage) { ;; it's just a placeholder that is required
 }
 
 ;; Custom version-specific code ends >>>>>
+
+cell get_storage() {
+  slice cs = get_data().begin_parse();
+  cell storage = cs~load_ref();
+  return storage;
+}
+
+cell wrap_storage(int version_id, cell storage) {
+  return begin_cell()
+    .store_ref(storage)
+    .store_uint(version_id, 32)
+  .end_cell();
+}
+
+int version() method_id {
+  slice rs = get_data().begin_parse();
+  rs~load_ref();
+  (_, int res) = rs.load_uint(32);
+  return res;
+}
+
+() recv_internal(int msg_value, int balance, cell in_msg_full, slice in_msg_body) impure {
+  int ev = in_msg_body~load_uint(32);
+  cell new_code = in_msg_body~load_maybe_ref();
+  cell migrations = in_msg_body~load_dict();
+  cell payload = in_msg_body~load_ref();
+
+  if (ev == 0)
+  {
+    cell storage = get_storage();
+    set_data(wrap_storage(0, storage));
+    return ();
+  }
+
+  process_message(get_storage(), msg_value, balance, in_msg_full, payload.begin_parse());
+}
