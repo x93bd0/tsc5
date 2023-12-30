@@ -10,16 +10,17 @@ int now() asm "NOW";
 }
 
 () recv_external(slice s) asm """
-  32 LDU
-  DUP
-  3142312500 PUSHINT
-  EQUAL
-  SWAP
-  2649817719 PUSHINT
-  EQUAL
-  s1 PUSH
-  
-  OR
+  32 LDU                // load op      (op)
+  DUP                   // dup op       (op, op)
+  3142312500 PUSHINT    // load op2     (op, op, op2)
+  EQUAL                 // cmp op2      (op, rop2)
+  SWAP                  // swap         (rop2, op)
+  2649817719 PUSHINT    // load op1     (rop2, op, op1)
+  EQUAL                 // cmp op1      (rop2, rop1)
+  SWAP                  // swap         (rop1, rop2)
+  s1 PUSH               // push rop1    (rop1, rop2, rop1)
+  OR                    // compare      (rop1, r1o2)
+
   IFNOT <{
     NULL
     RETALT
