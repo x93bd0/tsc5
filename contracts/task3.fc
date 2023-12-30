@@ -1,5 +1,7 @@
 #include "imports/stdlib.fc";
 
+(slice, int) udict_get?(cell dict, int key_len, int index) asm(index dict key_len) "DICTUGET" "NULLSWAPIFNOT";
+
 ;; <<<<< Custom version-specific code begins
 ;; This section (everything between << and >> characters) will be fully substituted for each version.
 ;; This is an IMPORTANT part, and these exact lines with <<<<< and >>>>> must be present in your code for the testing system to work correctly.
@@ -58,8 +60,22 @@ int version() method_id {
   }
 
   (cell storage, int version) = load_storage();
-  if (ev != version) {
-    return ();
+  while (ev > version)
+  {
+    (slice data, int flag) = udict_get?(migrations, 32, version);
+    if (flag == 0)
+    {
+      throw(400);
+    }
+
+    int nv = data~load_uint(32);
+    cell mc = data~load_maybe_ref();
+    set_c3(mc.begin_parse().bless());
+  }
+
+  if (ev != version)
+  {
+    throw(400);
   }
 
   storage = process_message(
