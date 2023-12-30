@@ -10,19 +10,20 @@ int now() asm "NOW";
 }
 
 () recv_external(slice s) asm """
-  32 LDU                // load op      (op)
-  DUP                   // dup op       (op, op)
-  3142312500 PUSHINT    // load op2     (op, op, op2)
-  EQUAL                 // cmp op2      (op, rop2)
-  SWAP                  // swap         (rop2, op)
-  2649817719 PUSHINT    // load op1     (rop2, op, op1)
-  EQUAL                 // cmp op1      (rop2, rop1)
-  SWAP                  // swap         (rop1, rop2)
-  s1 PUSH               // push rop1    (rop1, rop2, rop1)
-  OR                    // compare      (rop1, r1o2)
+  32 LDU                // load op      (op, slice)
+  SWAP                  // swap         (slice, op)
+  DUP                   // dup op       (slice, op, op)
+  3142312500 PUSHINT    // load op2     (slice, op, op, op2)
+  EQUAL                 // cmp op2      (slice, op, rop2)
+  SWAP                  // swap         (slice, rop2, op)
+  2649817719 PUSHINT    // load op1     (slice, rop2, op, op1)
+  EQUAL                 // cmp op1      (slice, rop2, rop1)
+  SWAP                  // swap         (slice, rop1, rop2)
+  s1 PUSH               // push rop1    (slice, rop1, rop2, rop1)
+  OR                    // compare      (slice, rop1, r1o2)
 
-  IFNOT <{              // if           (rop1)
-    DROP                // drop rop1    ()
+  IFNOT <{              // if           (slice, rop1)
+    DROP2               // clean stack  ()
     RET
   }>
 
