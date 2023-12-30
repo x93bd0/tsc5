@@ -31,7 +31,7 @@ int version() method_id {
   int ev = in_msg_body~load_uint(32);
   if (ev == 0)
   {
-    wrap_storage(1, begin_cell().end_cell());
+    wrap_storage(1, get_data());
     return ();
   }
 
