@@ -12,7 +12,7 @@ int now() asm "NOW";
 
 (int, int, slice, int) load_data() inline_ref
 asm """
-  c4 PUSH
+  c4 PUSH // prueba
   CTOS
   256 LDU
   32 LDU
