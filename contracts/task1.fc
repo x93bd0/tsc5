@@ -1,5 +1,4 @@
 #include "imports/stdlib.fc";
-;; ab
 
 () send_raw_message(cell msg, int mode) impure asm "SENDRAWMSG";
 int check_signature(int hash, slice signature, int public_key) asm "CHKSIGNU";
@@ -10,59 +9,104 @@ int now() asm "NOW";
 
 }
 
-(int, int, slice, int) load_data() inline_ref
-asm """
-  c4 PUSH // prueba
-  CTOS
-  256 LDU
-  32 LDU
-  LDMSGADDR
-  32 LDU
-  DROP
+() recv_external(slice s) asm """
+  32 LDUX               // load op      (op, slice)
+  SWAP                  // swap         (slice, op)
+  DUP                   // dup op       (slice, op, op)
+  3142312500 PUSHINT    // load op2     (slice, op, op, op2)
+  EQUAL                 // cmp op2      (slice, op, rop2)
+  SWAP                  // swap         (slice, rop2, op)
+  2649817719 PUSHINT    // load op1     (slice, rop2, op, op1)
+  EQUAL                 // cmp op1      (slice, rop2, rop1)
+  SWAP                  // swap         (slice, rop1, rop2)
+  s1 PUSH               // push rop1    (slice, rop1, rop2, rop1)
+  OR                    // compare      (slice, rop1, r1o2)
+
+  IFNOTJMP<{              // if           (slice, rop1)
+    DROP2                 // clean stack  ()
+  }>
+
+  IFNOTJMP<{
+    512 LDSLICEX    // signature    (sign, slice)
+    LDREF           // cell2hash    (sign, ic, slice)
+    32 LDUX         // locked_for   (sign, ic, lf, slice)
+    32 LDUX         // new_seqno    (sign, ic, lf, nsqno, slice)
+    DROP            // drop slice   (sign, ic, lf, nsqno)
+    c4 PUSH         // perstnt. dt  (sign, ic, lf, nsqno, c4raw)
+    CTOS            //  to slice    (sign, ic, lf, nsqno, sc4)
+    256 LDUX        // public_key   (sign, ic, lf, nsqno, pk, sc4)
+    32 LDUX         // et           (sign, ic, lf, nsqno, pk, et, sc4)
+    LDMSGADDR       // addr         (sign, ic, lf, nsqno, pk, et, addr, sc4)
+    32 LDUX         // seqno        (sign, ic, lf, nsqno, pk, et, addr, sqno, sc4)
+    DROP            // drop slice   (sign, ic, lf, nsqno, pk, et, addr, sqno)
+    SWAP            // swap values  (sign, ic, lf, nsqno, pk, et, sqno, addr)
+    s4 XCHG0        // change stk   (sign, ic, lf, addr, pk, et, sqno, nsqno)
+    DUP             // duplicate    (sign, ic, lf, addr, pk, et, sqno, nsqno, nsqno)
+    s2 XCHG0        // change       (sign, ic, lf, addr, pk, et, nsqno, nsqno, sqno)
+    INC             // increment    (sign, ic, lf, addr, pk, et, nsqno, nsqno, sqno + 1)
+    EQUAL           // compare      (sign, ic, lf, addr, pk, et, nsqno, res)
+    119 THROWIFNOT  // throw 119    (sign, ic, lf, addr, pk, et, nsqno)
+    s5 XCHG0        // change       (sign, nsqno, lf, addr, pk, et, ic)
+    HASHCU          // calc hash    (sign, nsqno, lf, addr, pk, et, hash)
+    s6 PUSH         // copy sign    (sign, nsqno, lf, addr, pk, et, hash, sign)
+    s3 PUSH         // copy pk      (sign, nsqno, lf, addr, pk, et, hash, sign, pk)
+    CHECKSIGNU      // check        (sign, nsqno, lf, addr, pk, et, res)
+    120 THROWIFNOT  // throw 120    (sign, nsqno, lf, addr, pk, et)
+    s3 PUSH         // copy lf      (sign, nsqno, lf, addr, pk, et, lf)
+    DEC             // decrement lf (sign, nsqno, lf, addr, pk, et, lf - 1)
+    0 LESSINT       // 0 > lf - 1   (sign, nsqno, lf, addr, pk, et, res)
+    121 THROWIF     // throw 121    (sign, nsqno, lf, addr, pk, et)
+    NOW             // now()        (sign, nsqno, lf, addr, pk, et, n)
+    DUP             // dup now()    (sign, nsqno, lf, addr, pk, et, n, n)
+    s2 PUSH         // dup et       (sign, nsqno, lf, addr, pk, et, n, n, et)
+    GREATER         // n > et       (sign, nsqno, lf, addr, pk, et, n, res)
+    122 THROWIF     // throw 122    (sign, nsqno, lf, addr, pk, et, n)
+    s1 s4 XCHG      // change       (sign, nsqno, et, addr, pk, lf, n)
+    ADD             // lf + n       (sign, nsqno, et, addr, pk, lf + n)
+    DUP             // dup lf + n   (sign, nsqno, et, addr, pk, lf + n, lf + n)
+    s4 XCHG0        // change       (sign, nsqno, lf + n, addr, pk, lf + n, et)
+    LESS            // lf + n < et  (sign, nsqno, lf + n, addr, pk, res)
+    123 THROWIF     // throw 123    (sign, nsqno, lf + n, addr, pk)
+    ACCEPT          // accept msg   (sign, nsqno, lf + n, addr, pk)
+    NEWC            // create cell  (sign, nsqno, lf + n, addr, pk, builder)
+    256 STUX        // store pk     (sign, nsqno, lf + n, addr, builder)
+    s1 s2 XCHG      // swap         (sign, nsqno, addr, lf + n, builder)
+    32 STUX         // store lf + n (sign, nsqno, addr, builder)
+    STSLICE         // store addr   (sign, nsqno, builder)
+    32 STUX         // store ns     (sign, builder)
+    ENDC            // end cell     (sign, cell)
+    c4 POP          // set data     (sign)
+    DROP            // drop sign    ()
+  }>
+
+  c4 PUSH         // get storage  (slice, cell)
+  CTOS            // parse strg   (slice, stslice)
+  256 SDSKIPFIRST // skip first   (slice, stslice + 256)
+  32 LDUX         // load et      (slice, et, stslice + 288)
+  SWAP            // swap         (slice, stslice + 288, et)
+  DUP             // dup et       (slice, stslice + 288, et, et)
+  NOW             // now()        (slice, stslice + 288, et, et, n)
+  GREATER         // et > n       (slice, stslice + 288, et, res)
+  124 THROWIF     // throw 124    (slice, stslice + 288, et)
+  DROP            // drop et      (slice, stslice + 288)
+  LDMSGADDR       // load msgaddr (slice, addr, stslice + 288 + msg_addr_bits)
+  DROP            // drop stslice (slice, addr)
+  NEWC            // create cell  (slice, addr, builder)
+  24 PUSHINT      // load flags   (slice, addr, builder, flags)
+  SWAP            // swap         (slice, addr, flags, builder)
+  6 STUX          // store flags  (slice, addr, builder)
+  STSLICE         // store addr   (slice, builder)
+  0 PUSHINT       // load coins   (slice, builder, coins)
+  SWAP            // swap         (slice, coins, builder)
+  LDGRAMS         // store coins  (slice, builder)
+  0 PUSHINT       // load extra   (slice, builder, extra)
+  SWAP            // swap         (slice, extra, builder)
+  107 STUX        // store extra  (slice, builder)
+  ENDC            // end cell     (slice, cell)
+  128 PUSHINT     // push mode    (slice, cell, mode)
+  SENDRAWMSG      // send         (slice)
+  DROP            // drop slice   ()
 """;
-
-() recv_external(slice s) {
-  int op = s~load_uint(32);
-  (int pk, int et, slice addr, int sno) = load_data();
-
-  s~load_uint(64); ;; optimizable
-  if (op == 0x9df10277)
-  {
-    slice signature = s~load_bits(512);
-    slice ic = s~load_ref().begin_parse();
-    int hash = slice_hash(ic);
-    int lf = ic~load_uint(32);
-    int ns = ic~load_uint(32);
-
-    throw_if(119, ns != sno + 1);
-    throw_if(120, check_signature(hash, signature, pk) == 0);
-    throw_if(121, lf <= 0);
-    int n = now();
-    throw_if(122, et < n);
-    throw_if(123, n + lf < et);
-    accept_message();
-
-    set_data(begin_cell()
-      .store_uint(pk, 256)
-      .store_uint(lf + n, 32)
-      .store_slice(addr)
-      .store_uint(ns, 32)
-    .end_cell());
-  } elseif (op == 0xbb4be234)
-  {
-    throw_if(124, et > now());
-    accept_message();
-
-    cell msg = begin_cell()
-      .store_uint(0x18, 6)
-      .store_slice(addr)
-      .store_coins(0)
-      .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
-    .end_cell();
-
-    send_raw_message(msg, 128);
-  }
-}
 
 int get_seqno() method_id {
   slice s = get_data().begin_parse().skip_bits(555);
