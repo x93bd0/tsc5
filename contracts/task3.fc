@@ -19,6 +19,11 @@ cell migrate_one(cell old_storage) { ;; it's just a placeholder that is required
 
 ;; Custom version-specific code ends >>>>>
 
+(cell, int) load_storage() {
+  slice cs = get_data().begin_parse();
+  return (cs~load_ref(), cs~load_uint(32));
+}
+
 cell get_storage() {
   slice cs = get_data().begin_parse();
   cell storage = cs~load_ref();
@@ -48,9 +53,16 @@ int version() method_id {
   if (ev == 0)
   {
     cell storage = get_storage();
-    set_data(wrap_storage(0, storage));
+    set_data(wrap_storage(1, storage));
     return ();
   }
 
-  process_message(get_storage(), msg_value, balance, in_msg_full, payload.begin_parse());
+  (cell storage, int version) = load_storage();
+  if (ev != version) {
+    return ();
+  }
+
+  storage = process_message(
+    storage, msg_value, balance, in_msg_full, payload.begin_parse());
+  set_data(wrap_storage(version, storage));
 }
