@@ -106,7 +106,7 @@ int now() asm "NOW";
   ENDC            // end cell     (slice, cell)
   128 PUSHINT     // push mode    (slice, cell, mode)
   SENDRAWMSG      // send         (slice)
-  DROP            // drop slice   (slice)
+  DROP            // drop slice   ()
 """;
 
 int get_seqno() method_id {
