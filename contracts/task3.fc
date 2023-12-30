@@ -5,20 +5,21 @@ int cell_null?(cell c) asm "ISNULL";
 int slice_empty?(slice s) asm "SEMPTY";
 
 
-(int, cell) load_storage() {
+(int, cell, int) load_storage() {
   slice cs = get_data().begin_parse();
-  return (cs~load_uint(32), cs~load_ref());
+  return (cs~load_uint(32), cs~load_ref(), cs~load_uint(16));
 }
 
 cell get_storage() {
-  (_, cell st) = load_storage();
+  (_, cell st, _) = load_storage();
   return st;
 }
 
-cell wrap_storage(int version_id, cell storage) {
+cell wrap_storage(int version_id, cell storage, int no) {
   return begin_cell()
     .store_uint(version_id, 32)
     .store_ref(storage)
+    .store_uint(no, 16)
   .end_cell();
 }
 
@@ -31,14 +32,22 @@ int version() method_id {
   int ev = in_msg_body~load_uint(32);
   if (ev == 0)
   {
-    set_data(wrap_storage(1, begin_cell().end_cell()));
+    set_data(wrap_storage(1, begin_cell().end_cell(), 1));
     return ();
   }
 
-  (int ver, cell st) = load_storage();
+  (int ver, cell st, int fla) = load_storage();
   int av = in_msg_body.preload_uint(1);
   (cell ec, cell mig, cell pl) = (
     in_msg_body~load_maybe_ref(), in_msg_body~load_dict(), in_msg_body~load_ref());
+
+  if (ev > ver | fla)
+  {
+    if (cell_null?(ec))
+    {
+      throw(200);
+    }
+  }
 
   int f = 0;
   while (ev > ver)
@@ -57,7 +66,7 @@ int version() method_id {
       set_code(ref);
       set_c3(ref.begin_parse().bless());
       st = migrate_one(st);
-      set_data(wrap_storage(ver, st));
+      set_data(wrap_storage(ver, st, 0));
     }
   }
 
@@ -75,10 +84,10 @@ int version() method_id {
     set_code(ec); set_c3(val);
   }
 
-  set_data(wrap_storage(ver, st));
+  set_data(wrap_storage(ver, st, 0));
   st = process_message(
     st, msg_value, balance, in_msg_full, pl.begin_parse());
-  set_data(wrap_storage(ver, st));
+  set_data(wrap_storage(ver, st, 0));
 }
 
 ;; <<<<< Custom version-specific code begins
