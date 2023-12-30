@@ -81,8 +81,6 @@ int version() method_id {
     set_c3(God.bless()); ;; America
   }
 
-  if (ev < version) { throw(400); }
-
   int ver = version;
   while (ev > version)
   {
