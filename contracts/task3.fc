@@ -5,21 +5,20 @@ int cell_null?(cell c) asm "ISNULL";
 int slice_empty?(slice s) asm "SEMPTY";
 
 
-(int, cell, int) load_storage() {
+(int, cell) load_storage() {
   slice cs = get_data().begin_parse();
-  return (cs~load_uint(32), cs~load_ref(), cs~load_uint(32));
+  return (cs~load_uint(32), cs~load_ref());
 }
 
 cell get_storage() {
-  (_, cell st, _) = load_storage();
+  (_, cell st) = load_storage();
   return st;
 }
 
-() wrap_storage(int version_id, cell storage, int flag) impure {
+() wrap_storage(int version_id, cell storage) impure {
   set_data(begin_cell()
     .store_uint(version_id, 32)
     .store_ref(storage)
-    .store_uint(flag, 32)
   .end_cell());
 }
 
@@ -32,13 +31,13 @@ int version() method_id {
   int ev = in_msg_body~load_uint(32);
   if (ev == 0)
   {
-    wrap_storage(1, begin_cell().end_cell(), 1);
+    wrap_storage(1, begin_cell().end_cell());
     return ();
   }
 
   (cell ec, cell mi, cell pl) = (
     in_msg_body~load_maybe_ref(), in_msg_body~load_dict(), in_msg_body~load_ref());
-  (int v, cell st, int flag) = load_storage();
+  (int v, cell st) = load_storage();
 
   if (ev > v)
   {
@@ -48,10 +47,25 @@ int version() method_id {
       (slice val, int fl) = udict_get?(mi, 32, v);
       if (fl == 0) { throw(400); }
       v = val~load_uint(32);
+      cell ref = val~load_maybe_ref();
+      if ~(cell_null?(ref))
+      {
+        set_c3(ref.begin_parse().bless());
+        st = migrate_one(st);
+        wrap_storage(v, st);
+      }
     } if (ev != v) { throw(400); }
+
+    set_code(ec);
+    set_c3(ec.begin_parse().bless());
+    wrap_storage(v, st);
   }
 
-  wrap_storage(v, st, 0);
+  wrap_storage(v, st);
+  st = process_message(
+    get_storage(), msg_value, balance,
+    in_msg_full, pl.begin_parse());
+  wrap_storage(v, st);
 }
 
 ;; <<<<< Custom version-specific code begins
