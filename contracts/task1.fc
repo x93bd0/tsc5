@@ -16,7 +16,7 @@ asm """
   CTOS
   256 LDU
   32 LDU
-  LOADMSGADDR
+  LDMSGADDR
   32 LDU
   DROP
 """;
