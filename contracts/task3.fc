@@ -40,7 +40,7 @@ int version() method_id {
     in_msg_body~load_maybe_ref(), in_msg_body~load_dict(), in_msg_body~load_ref());
   (int v, cell st, int flag) = load_storage();
 
-  if (ev > v)
+  if (ev > v) & (flag == 1)
   {
     throw_unless(200, ~(cell_null?(ec)));
   }
