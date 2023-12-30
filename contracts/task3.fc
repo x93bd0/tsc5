@@ -24,44 +24,45 @@ cell migrate_one(cell old_storage) { ;; it's just a placeholder that is required
 
 ;; Custom version-specific code ends >>>>>
 
-(cell, int, int) load_storage() {
+(int, cell) load_storage() {
   slice cs = get_data().begin_parse();
-  return (cs~load_ref(), cs~load_uint(32), cs~load_uint(32));
+  return (cs~load_uint(32), cs~load_ref());
 }
 
 cell get_storage() {
-  slice cs = get_data().begin_parse();
-  cell storage = cs~load_ref();
-  return storage;
+  (_, cell st) = load_storage();
+  return st;
 }
 
-cell wrap_storage(int version_id, cell storage, int last_code_update) {
+cell wrap_storage(int version_id, cell storage) {
   return begin_cell()
-    .store_ref(storage)
     .store_uint(version_id, 32)
-    .store_uint(last_code_update, 32)
+    .store_ref(storage)
   .end_cell();
 }
 
 int version() method_id {
-  (_, int v, _) = load_storage();
-  return v;
+  slice cs = get_data().begin_parse();
+  return cs~load_uint(32);
 }
 
 () recv_internal(int msg_value, int balance, cell in_msg_full, slice in_msg_body) impure {
   int ev = in_msg_body~load_uint(32);
   if (ev == 0)
   {
-    set_data(wrap_storage(1, begin_cell().end_cell(), 1));
+    set_data(wrap_storage(1, begin_cell().end_cell()));
     return ();
   }
 
-  (cell st, int ver, int lcu) = load_storage();
+  (int ver, cell st) = load_storage();
   (cell ec, cell mig, cell pl) = (
     in_msg_body~load_maybe_ref(), in_msg_body~load_dict(), in_msg_body~load_ref());
 
+  int f = 0;
   while (ev > ver)
   {
+    f = 1;
+
     (slice val, int fl) = udict_get?(mig, 32, ver);
     if (fl == 0)
     { throw(400); }
@@ -78,9 +79,9 @@ int version() method_id {
 
   if (ver != ev)
   { throw(400); }
-  if (lcu != ver)
+
+  if (f)
   {
-    lcu = ver;
     if (cell_null?(ec))
     { throw(200); }
     cont val = ec.begin_parse().bless();
@@ -89,5 +90,5 @@ int version() method_id {
 
   st = process_message(
     st, msg_value, balance, in_msg_full, pl.begin_parse());
-  set_data(wrap_storage(ver, st, ver));
+  set_data(wrap_storage(ver, st));
 }
