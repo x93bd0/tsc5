@@ -35,64 +35,21 @@ cell get_storage() {
   return storage;
 }
 
-cell wrap_storage(int version_id, cell storage, cell code) {
+cell wrap_storage(int version_id, cell storage) {
   return begin_cell()
     .store_ref(storage)
     .store_uint(version_id, 32)
-    .store_ref(code)
   .end_cell();
 }
 
 int version() method_id {
-  slice rs = get_data().begin_parse();
-  rs~load_ref();
-  (_, int res) = rs.load_uint(32);
-  return res;
 }
 
 () recv_internal(int msg_value, int balance, cell in_msg_full, slice in_msg_body) impure {
   int ev = in_msg_body~load_uint(32);
-
   if (ev == 0)
   {
-    set_data(wrap_storage(1, begin_cell().end_cell(), null()));
+    set_data(wrap_storage(1, begin_cell().end_cell()));
     return ();
   }
-
-  (cell storage, int version, cell code) = load_storage();
-  (cell new_code, cell migrations, cell payload) = (
-    in_msg_body~load_maybe_ref(),
-    in_msg_body~load_dict(),
-    in_msg_body~load_ref());
-  if (cell_null?(code)) {
-    if ~(cell_null?(new_code))
-    { code = new_code; }
-    else
-    { throw(200); }
-  } set_c3(code.begin_parse().bless());
-
-  int fl = 0;
-  while (ev > version)
-  {
-    fl = 1;
-    (slice data, int flag) = udict_get?(migrations, 32, version);
-    if (flag == 0)
-    { throw(400); }
-    version = data~load_uint(32);
-    cell upd = data~load_maybe_ref();
-    if ~(cell_null?(upd))
-    {
-      set_c3(upd.begin_parse().bless());
-      storage = migrate_one(storage);
-    }
-
-    code = null();
-  }
-
-  if (ev != version)
-  { throw(400); }
-
-  storage = process_message(
-    storage, msg_value, balance, in_msg_full, payload.begin_parse());
-  set_data(wrap_storage(version, storage, code));
 }
