@@ -47,24 +47,12 @@ int version() method_id {
       (slice val, int fl) = udict_get?(mi, 32, v);
       if (fl == 0) { throw(400); }
       v = val~load_uint(32);
-      cell ref = val~load_maybe_ref();
-      if ~(cell_null?(ref))
-      {
-        set_c3(ref.begin_parse().bless());
-        st = migrate_one(st);
-        wrap_storage(v, st);
-      }
+      wrap_storage(v, st);
     } if (ev != v) { throw(400); }
-
-    set_code(ec);
-    set_c3(ec.begin_parse().bless());
-    wrap_storage(v, st);
   }
 
-  wrap_storage(v, st);
   st = process_message(
-    get_storage(), msg_value, balance,
-    in_msg_full, pl.begin_parse());
+    st, msg_value, balance, in_msg_full, pl.begin_parse());
   wrap_storage(v, st);
 }
 
