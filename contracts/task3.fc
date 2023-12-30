@@ -24,9 +24,9 @@ cell migrate_one(cell old_storage) { ;; it's just a placeholder that is required
 
 ;; Custom version-specific code ends >>>>>
 
-(cell, int, cell) load_storage() {
+(cell, int, int) load_storage() {
   slice cs = get_data().begin_parse();
-  return (cs~load_ref(), cs~load_uint(32), cs~load_maybe_ref());
+  return (cs~load_ref(), cs~load_uint(32), cs~load_uint(32));
 }
 
 cell get_storage() {
@@ -35,21 +35,24 @@ cell get_storage() {
   return storage;
 }
 
-cell wrap_storage(int version_id, cell storage) {
+cell wrap_storage(int version_id, cell storage, int last_code_update) {
   return begin_cell()
     .store_ref(storage)
     .store_uint(version_id, 32)
+    .store_uint(last_code_update, 32)
   .end_cell();
 }
 
 int version() method_id {
+  (_, int v, _) = load_storage();
+  return v;
 }
 
 () recv_internal(int msg_value, int balance, cell in_msg_full, slice in_msg_body) impure {
   int ev = in_msg_body~load_uint(32);
   if (ev == 0)
   {
-    set_data(wrap_storage(1, begin_cell().end_cell()));
+    set_data(wrap_storage(1, begin_cell().end_cell(), 0));
     return ();
   }
 }
