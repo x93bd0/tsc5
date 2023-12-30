@@ -4,8 +4,8 @@
 int slice_empty?(slice s) asm "SEMPTY";
 
 
-<<<<<
->>>>>
+;; <<<<<
+;; >>>>>
 
 (cell, int, int) load_storage() {
   slice cs = get_data().begin_parse();
@@ -47,15 +47,12 @@ int version() method_id {
 
   if (ev == 0)
   {
-    set_data(wrap_storage_update(1, get_storage()));
+    set_data(wrap_storage_update(1, begin_cell().end_cell()));
     return ();
   }
 
   (cell storage, int version, int expupd) = load_storage();
-  if (ev < version)
-  {
-    throw(400);
-  }
+  if (ev < version) { throw(400); }
 
   cell new_code = in_msg_body~load_maybe_ref();
   cell migrations = in_msg_body~load_dict();
@@ -63,36 +60,27 @@ int version() method_id {
 
   if (expupd == 1)
   {
+    if (cell_null(new_code)) { throw(200); }
     slice God = new_code.begin_parse();
-    if (slice_empty?(God))
-    {
-      throw(200);
-    }
-
     set_c3(God.bless()); ;; America
   }
 
   (slice data, int flag) = udict_get?(migrations, 32, version);
-  if (flag == 0)
-  {
-    throw(400);
-  }
+  if (flag == 0) { throw(400); }
 
   int ver = version;
   while (ev > version)
   {
     (slice data, int flag) = udict_get?(migrations, 32, version);
     if (flag == 0)
-    {
-      throw(400);
-    }
+    { throw(400); }
 
     version = data~load_uint(32);
-    slice God = data~load_maybe_ref().begin_parse();
 
-    if ~(slice_empty?(God))
+    cell upd = data~load_maybe_ref();
+    if ~(cell_null(upd))
     {
-      set_c3(God.bless()); ;; America
+      set_c3(upd.begin_parse().bless());
       storage = migrate_one(storage);
     }
   }
@@ -106,10 +94,6 @@ int version() method_id {
     storage, msg_value, balance, in_msg_full, payload.begin_parse());
 
   if (ver != version)
-  {
-    set_data(wrap_storage_update(version, storage));
-  } else
-  {
-    set_data(wrap_storage(version, storage));
-  }
+  { set_data(wrap_storage_update(version, storage)); }
+  else { set_data(wrap_storage(version, storage)); }
 }
