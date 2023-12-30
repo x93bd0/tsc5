@@ -55,6 +55,7 @@ int version() method_id {
   }
 
   (int ver, cell st) = load_storage();
+  int av = in_msg_body.preload_uint(1);
   (cell ec, cell mig, cell pl) = (
     in_msg_body~load_maybe_ref(), in_msg_body~load_dict(), in_msg_body~load_ref());
 
@@ -82,7 +83,7 @@ int version() method_id {
 
   if (f)
   {
-    if (cell_null?(ec))
+    if (av)
     { throw(200); }
     cont val = ec.begin_parse().bless();
     set_code(ec); set_c3(val);
