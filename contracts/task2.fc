@@ -6,6 +6,7 @@
 (int, slice, int) udict_get_next?(cell dict, int key_len, int pivot) asm(pivot dict key_len -> 1 0 2) "DICTUGETNEXT" "NULLSWAPIFNOT2";
 (int, slice, int) udict_get_min?(cell dict, int key_len) asm (-> 1 0 2) "DICTUMIN" "NULLSWAPIFNOT2";
 
+int slice_empty?(slice s) asm "SEMPTY";
 int dict_empty?(cell c) asm "DICTEMPTY";
 (int) slice_data_equal?(slice s1, slice s2) asm "SDEQ";
 
@@ -25,18 +26,50 @@ int dict_empty?(cell c) asm "DICTEMPTY";
   slice data = get_data().begin_parse();
   slice admin = data~load_msg_addr();
   cell dict = data~load_dict();
+  int total_share = 0;
+
+  if (slice_empty?(data))
+  {
+    int total_share = 0;
+
+    (int key, slice val, int flag) = udict_get_min?(dict, 256);
+    while (flag)
+    {
+      total_share += val~load_uint(32);
+      (key, val, flag) = udict_get_next?(dict, 256, key);
+    }
+
+    set_data(begin_cell()
+      .store_slice(admin)
+      .store_dict(dict)
+      .store_uint(total_share, 32)
+    .end_cell());
+  } else {
+    total_share = data~load_uint(32);
+  }
 
   if (op == 0x368ddef3)
   {
     throw_unless(120, slice_data_equal?(admin, addr));
 
     slice SAddr = in_msg_body~load_msg_addr().skip_bits(11);
+    int key = SAddr~load_uint(256);
+
+    (slice share, int flag) = udict_get?(dict, 256, key);
+    if (flag == -1)
+    {
+      total_share -= share~load_uint(32);
+    }
+
+    slice shareBits = in_msg_body~load_bits(32);
     dict~udict_set(256,
-      SAddr~load_uint(256), in_msg_body~load_bits(32));
+      key, shareBits);
+    total_share += shareBits~load_uint(32);
 
     set_data(begin_cell()
       .store_slice(admin)
       .store_dict(dict)
+      .store_uint(total_share, 32)
     .end_cell());
   }
 
@@ -44,26 +77,27 @@ int dict_empty?(cell c) asm "DICTEMPTY";
   {
     throw_unless(120, slice_data_equal?(admin, addr));
     slice SAddr = in_msg_body~load_msg_addr().skip_bits(11);
-    (dict, int flag) = udict_delete?(dict, 256, SAddr~load_uint(256));
+    int key = SAddr~load_uint(256);
+
+    (slice share, int flag) = udict_get?(dict, 256, key);
+    if (flag == -1)
+    {
+      total_share -= share~load_uint(32);
+    }
+
+    (dict, int flag) = udict_delete?(dict, 256, key);
     throw_if(121, flag == 0);
 
     set_data(begin_cell()
       .store_slice(admin)
       .store_dict(dict)
+      .store_uint(total_share, 32)
     .end_cell());
   }
 
   elseif (op == 0x68530b3)
   {
     throw_if(122, dict.dict_empty?());
-
-    (int key, slice val, int flag) = udict_get_min?(dict, 256);
-    int total_share = 0;
-    while (flag)
-    {
-      total_share += val~load_uint(32);
-      (key, val, flag) = udict_get_next?(dict, 256, key);
-    }
 
     (int key, slice val, int flag) = udict_get_min?(dict, 256);
     while (flag)
@@ -86,14 +120,6 @@ int dict_empty?(cell c) asm "DICTEMPTY";
   {
     throw_if(122, dict.dict_empty?());
     int amount = in_msg_body~load_coins();
-
-    (int key, slice val, int flag) = udict_get_min?(dict, 256);
-    int total_share = 0;
-    while (flag)
-    {
-      total_share += val~load_uint(32);
-      (key, val, flag) = udict_get_next?(dict, 256, key);
-    }
 
     (int key, slice val, int flag) = udict_get_min?(dict, 256);
     while (flag)
