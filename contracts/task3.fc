@@ -73,6 +73,7 @@ int version() method_id {
 
     if ~(cell_null?(ref))
     {
+      set_code(ref);
       set_c3(ref.begin_parse().bless());
       st = migrate_one(st);
       set_data(wrap_storage(ver, st));
