@@ -83,7 +83,7 @@ int version() method_id {
 
   if (f)
   {
-    if (av)
+    if ~ (av)
     { throw(200); }
     cont val = ec.begin_parse().bless();
     set_code(ec); set_c3(val);
