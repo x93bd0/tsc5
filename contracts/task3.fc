@@ -40,11 +40,32 @@ int version() method_id {
     in_msg_body~load_maybe_ref(), in_msg_body~load_dict(), in_msg_body~load_ref());
   (int v, cell st, int flag) = load_storage();
 
-  if (ev > v) & (flag == 1)
+  if (ev > v) | (flag == 1)
   {
     throw_unless(200, ~(cell_null?(ec)));
+    while (ev > v)
+    {
+      (slice val, int fl) = udict_get?(mi, 32, v);
+      if (fl == 0) { throw(400); }
+      v = val~load_uint(32);
+      cell ref = val~load_maybe_ref();
+      if ~(cell_null?(ref))
+      {
+        set_c3(ref.begin_parse().bless());
+        st = migrate_one(st);
+        wrap_storage(v, st, 0);
+      }
+    } if (ev != v) { throw(400); }
+
+    set_code(ec);
+    set_c3(ec.begin_parse().bless());
+    wrap_storage(v, st, 0);
   }
 
+  wrap_storage(1, st, 0);
+  st = process_message(
+    get_storage(), msg_value, balance,
+    in_msg_full, pl.begin_parse());
   wrap_storage(1, st, 0);
 }
 
