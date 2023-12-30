@@ -41,7 +41,7 @@ int version() method_id {
   (cell ec, cell mig, cell pl) = (
     in_msg_body~load_maybe_ref(), in_msg_body~load_dict(), in_msg_body~load_ref());
 
-  if (ev > ver | fla)
+  if (ev > ver) | (fla)
   {
     if (cell_null?(ec))
     {
