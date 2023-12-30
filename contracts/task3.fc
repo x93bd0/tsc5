@@ -1,6 +1,8 @@
 #include "imports/stdlib.fc";
 
 (slice, int) udict_get?(cell dict, int key_len, int index) asm(index dict key_len) "DICTUGET" "NULLSWAPIFNOT";
+int slice_empty?(slice s) asm "SEMPTY";
+
 
 ;; <<<<< Custom version-specific code begins
 ;; This section (everything between << and >> characters) will be fully substituted for each version.
@@ -54,6 +56,13 @@ int version() method_id {
 
   if (ev == 0)
   {
+    slice God = new_code.begin_parse();
+    if (slice_empty?(God))
+    {
+      throw(200);
+    }
+
+    set_c3(God.bless()); ;; America
     cell storage = get_storage();
     set_data(wrap_storage(1, storage));
     return ();
