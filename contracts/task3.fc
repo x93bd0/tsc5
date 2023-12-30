@@ -72,6 +72,7 @@ int version() method_id {
   cell new_code = in_msg_body~load_maybe_ref();
   cell migrations = in_msg_body~load_dict();
   cell payload = in_msg_body~load_ref();
+  if (cell_null?(new_code)) { throw(200); }
 
   if (expupd == 1)
   {
