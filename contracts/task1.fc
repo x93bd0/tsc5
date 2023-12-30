@@ -63,11 +63,11 @@ int now() asm "NOW";
 }
 
 int get_seqno() method_id {
-  (_, _, _, int sno) = load_data();
-  return sno;
+  slice s = get_data().begin_parse().skip_bits(555);
+  return s~load_uint(32);
 }
 
 int get_execution_time() method_id {
-  (_, int et, _, _) = load_data();
-  return et;
+  slice s = get_data().begin_parse().skip_bits(256);
+  return s~load_uint(32);
 }
