@@ -22,8 +22,7 @@ int now() asm "NOW";
   OR                    // compare      (rop1, r1o2)
 
   IFNOT <{
-    NULL
-    RETALT
+    RET
   }>
 
   IF<{
@@ -105,7 +104,6 @@ int now() asm "NOW";
     SENDRAWMSG      // send         (slice)
     DROP            // drop slice   (slice)
   }>
-  NULL
 """;
 
 int get_seqno() method_id {
