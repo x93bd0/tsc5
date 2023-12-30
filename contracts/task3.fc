@@ -69,8 +69,6 @@ int version() method_id {
   }
 
   (cell storage, int version, int expupd) = load_storage();
-  if (ev < version) { throw(400); }
-
   cell new_code = in_msg_body~load_maybe_ref();
   cell migrations = in_msg_body~load_dict();
   cell payload = in_msg_body~load_ref();
@@ -82,6 +80,7 @@ int version() method_id {
     set_c3(God.bless()); ;; America
   }
 
+  if (ev < version) { throw(400); }
   (slice data, int flag) = udict_get?(migrations, 32, version);
   if (flag == 0) { throw(400); }
 
