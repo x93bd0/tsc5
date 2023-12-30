@@ -24,9 +24,9 @@ cell migrate_one(cell old_storage) { ;; it's just a placeholder that is required
 
 ;; Custom version-specific code ends >>>>>
 
-(cell, int, int) load_storage() {
+(cell, int, cell) load_storage() {
   slice cs = get_data().begin_parse();
-  return (cs~load_ref(), cs~load_uint(32), cs~load_uint(1));
+  return (cs~load_ref(), cs~load_uint(32), cs~load_maybe_ref());
 }
 
 cell get_storage() {
@@ -35,20 +35,11 @@ cell get_storage() {
   return storage;
 }
 
-cell wrap_storage_update(int vid, cell storage)
-{
-  return begin_cell()
-    .store_ref(storage)
-    .store_uint(vid, 32)
-    .store_uint(1, 1)
-  .end_cell();
-}
-
-cell wrap_storage(int version_id, cell storage) {
+cell wrap_storage(int version_id, cell storage, cell code) {
   return begin_cell()
     .store_ref(storage)
     .store_uint(version_id, 32)
-    .store_uint(0, 1)
+    .store_ref(code)
   .end_cell();
 }
 
@@ -64,49 +55,44 @@ int version() method_id {
 
   if (ev == 0)
   {
-    set_data(wrap_storage_update(1, begin_cell().end_cell()));
+    set_data(wrap_storage(1, begin_cell().end_cell(), null()));
     return ();
   }
 
-  (cell storage, int version, int expupd) = load_storage();
-  cell new_code = in_msg_body~load_maybe_ref();
-  cell migrations = in_msg_body~load_dict();
-  cell payload = in_msg_body~load_ref();
-  if (cell_null?(new_code)) { throw(200); }
+  (cell storage, int version, cell code) = load_storage();
+  (cell new_code, cell migrations, cell payload) = (
+    in_msg_body~load_maybe_ref(),
+    in_msg_body~load_dict(),
+    in_msg_body~load_ref());
+  if (cell_null?(code)) {
+    if ~(cell_null?(new_code))
+    { code = new_code; }
+    else
+    { throw(200); }
+  } set_c3(code.begin_parse().bless());
 
-  if (expupd == 1)
-  {
-    if (cell_null?(new_code)) { throw(200); }
-    slice God = new_code.begin_parse();
-    set_c3(God.bless()); ;; America
-  }
-
-  int ver = version;
+  int fl = 0;
   while (ev > version)
   {
+    fl = 1;
     (slice data, int flag) = udict_get?(migrations, 32, version);
     if (flag == 0)
     { throw(400); }
-
     version = data~load_uint(32);
-
     cell upd = data~load_maybe_ref();
     if ~(cell_null?(upd))
     {
       set_c3(upd.begin_parse().bless());
       storage = migrate_one(storage);
     }
+
+    code = null();
   }
 
   if (ev != version)
-  {
-    throw(400);
-  }
+  { throw(400); }
 
   storage = process_message(
     storage, msg_value, balance, in_msg_full, payload.begin_parse());
-
-  if (ver != version)
-  { set_data(wrap_storage_update(version, storage)); }
-  else { set_data(wrap_storage(version, storage)); }
+  set_data(wrap_storage(version, storage, code));
 }
