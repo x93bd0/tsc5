@@ -20,7 +20,7 @@ asm """
   DROP
 """;
 
-(cell) setup(slice addr)
+(cell) send(slice addr)
 asm """
   0 PUSHINT
   24 PUSHINT
@@ -32,7 +32,9 @@ asm """
   STGRAMS
   107 STU
   ENDC
-""";
+  128 PUSHINT
+  SENDRAWMSG
+"""
 
 () recv_external(slice s) {
   int op = s~load_uint(32);
@@ -70,9 +72,7 @@ asm """
   {
     throw_if(124, et > now());
     accept_message();
-
-    cell msg = setup(addr);
-    send_raw_message(msg, 128);
+    send(addr);
   }
 }
 
