@@ -28,8 +28,11 @@ asm """
     DROP2               // clean stack  ()
   }>ELSE<{
     IF:<{
-      512 PUSHINT
-      LDSLICEX     // signature    (sign, slice)
+      64 LDU          // load qid     (int, slice)
+      SWAP            // swap values  (slice, int)
+      DROP            // drop val     (slice)
+      512 PUSHINT     // push const   (slice, int)
+      LDSLICEX        // signature    (sign, slice)
       LDREF           // cell2hash    (sign, ic, slice)
       32 LDU          // locked_for   (sign, ic, lf, slice)
       32 LDU          // new_seqno    (sign, ic, lf, nsqno, slice)
@@ -80,6 +83,9 @@ asm """
       c4 POP          // set data     (sign)
       DROP            // drop sign    ()
     }>ELSE<{
+      64 LDU          // load qid     (int, slice)
+      SWAP            // swap values  (slice, int)
+      DROP            // drop val     (slice)
       c4 PUSH         // get storage  (slice, cell)
       CTOS            // parse strg   (slice, stslice)
       256 PUSHINT     // load const   (slice, stslice, bits)
