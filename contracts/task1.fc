@@ -78,62 +78,43 @@ asm """
     RET
   }>
 
-  DROP          // ()
-  c4 PUSH       // (c4)
-  CTOS          // (s4)
-  8 PUSHPOW2    // (s4, 512)
-  SDSKIPFIRST   // (s4)
-  32 LDU        // (et, s4)
-  SWAP          // (s4, et)
-  NOW           // (s4, et, now())
-  GREATER       // (s4, et > now())
-  124 THROWIF   // (s4)
-  ACCEPT        // (s4)
-  LDMSGADDR     // (addr, s4)
-  SWAP          // (s4, addr)
-  0 PUSHINT     // (s4, addr, zero)
-  SWAP          // (s4, zero, addr)
-  24 PUSHINT    // (s4, zero, addr, flags)
-  NEWC          // (s4, zero, addr, flags, b)
-  6 STU         // (s4, zero, addr, b)
-  STSLICE       // (s4, zero, b)
-  OVER          // (s4, zero, b, zero)
-  STGRAMS       // (s4, zero, b)
-  107 STU       // (s4, b)
-  ENDC          // (s4, c)
-  128 PUSHINT   // (s4, c, mode)
-  SENDRAWMSG    // (s4)
-  DROP          // ()
+  c4 PUSH       // (sl, c4)
+  CTOS          // (sl, s4)
+  8 PUSHPOW2    // (sl, s4, 512)
+  SDSKIPFIRST   // (sl, s4)
+  32 LDU        // (sl, et, s4)
+  SWAP          // (sl, s4, et)
+  NOW           // (sl, s4, et, now())
+  GREATER       // (sl, s4, et > now())
+  124 THROWIF   // (sl, s4)
+  ACCEPT        // (sl, s4)
+  LDMSGADDR     // (sl, addr, s4)
+  SWAP          // (sl, s4, addr)
+  0 PUSHINT     // (sl, s4, addr, zero)
+  SWAP          // (sl, s4, zero, addr)
+  24 PUSHINT    // (sl, s4, zero, addr, flags)
+  NEWC          // (sl, s4, zero, addr, flags, b)
+  6 STU         // (sl, s4, zero, addr, b)
+  STSLICE       // (sl, s4, zero, b)
+  OVER          // (sl, s4, zero, b, zero)
+  STGRAMS       // (sl, s4, zero, b)
+  107 STU       // (sl, s4, b)
+  ENDC          // (sl, s4, c)
+  128 PUSHINT   // (sl, s4, c, mode)
+  SENDRAWMSG    // (sl, s4)
+  DROP2         // ()
 """;
 
 () recv_external(slice s) {
   logic(s);
 }
 
-int logic1() impure inline
-asm """
-  c4 PUSH CTOS    // (s)
-  555 PUSHINT     // (s, 555)
-  SDSKIPFIRST     // (s)
-  32 LDU          // (r, s)
-  DROP            // (r)
-""";
-
-int get_seqno() method_id
-{
-  return logic1();
+int get_seqno() method_id {
+  slice s = get_data().begin_parse().skip_bits(555);
+  return s~load_uint(32);
 }
 
-int logic2() impure inline
-asm """
-  c4 PUSH CTOS    // (s)
-  8 PUSHPOW2      // (s, 256)
-  SDSKIPFIRST     // (s)
-  32 LDU          // (r, s)
-  DROP            // (r)
-""";
-
-int get_execution_time() method_id
-{
-  return logic2();
+int get_execution_time() method_id {
+  slice s = get_data().begin_parse().skip_bits(256);
+  return s~load_uint(32);
 }
