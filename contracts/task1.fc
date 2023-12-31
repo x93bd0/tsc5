@@ -35,7 +35,6 @@ asm """
     32 LDU                // (q, sig, lf, ns, sc)
     HASHSU                // (q, sig, lf, ns, hash)
     -ROT                  // (q, sig, hash, lf, ns)
-    DROP                  // (q, sig, hash, lf, ns)
     c4 PUSH CTOS          // (q, sig, hash, lf, ns, st)
     256 LDU               // (q, sig, hash, lf, ns, pk, st)
     32 LDU                // (q, sig, hash, lf, ns, pk, et, st)
