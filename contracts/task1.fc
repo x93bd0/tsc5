@@ -82,7 +82,7 @@ asm """
     }>ELSE<{
       c4 PUSH         // get storage  (slice, cell)
       CTOS            // parse strg   (slice, stslice)
-      PUSHINT 256     // load const   (slice, stslice, bits)
+      256 PUSHINT     // load const   (slice, stslice, bits)
       SDSKIPFIRST     // skip first   (slice, stslice + 256)
       32 LDU          // load et      (slice, et, stslice + 288)
       SWAP            // swap         (slice, stslice + 288, et)
