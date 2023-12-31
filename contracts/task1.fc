@@ -20,7 +20,7 @@ asm """
   DROP
 """;
 
-(cell) send(slice addr)
+() send(slice addr)
 asm """
   0 PUSHINT
   24 PUSHINT
