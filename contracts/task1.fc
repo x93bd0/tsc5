@@ -20,7 +20,7 @@ asm """
   DROP
 """;
 
-() logic(int t, slice in) impure
+() logic(slice in, int t) impure
 asm """
   IF:<{
     64 LDU                // (q, in)
@@ -109,7 +109,7 @@ asm """
     return ();
   }
 
-  logic(t, s);
+  logic(s, t);
 }
 
 int get_seqno() method_id {
