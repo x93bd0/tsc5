@@ -10,18 +10,7 @@ int now() asm "NOW";
 }
 
 (int, int, slice, int) load_data() inline_ref
-{
-  slice st = get_data().begin_parse();
-  return (
-    st~load_uint(256), st~load_uint(32),
-    st~load_msg_addr(),
-    st~load_uint(32)
-  );
-}
-
-() recv_external(slice s) asm """
-PROC:<{
-  32 LDU
+asm """
   c4 PUSH
   CTOS
   256 LDU
@@ -29,95 +18,62 @@ PROC:<{
   LDMSGADDR
   32 LDU
   DROP
-  s0 s4 XCHG
-  64 LDU
-  NIP
-  s5 PUSH
-  2649817719 PUSHINT
-  EQUAL
-  IF:<{
-    s5 POP
-    s0 s4 XCHG
-    9 PUSHPOW2
-    LDSLICEX
-    LDREF
-    DROP
-    CTOS
-    DUP
-    HASHSU
-    SWAP
-    32 LDU
-    32 LDU
-    DROP
-    s0 s6 XCHG
-    INC
-    s6 s(-1) PUXC
-    NEQ
-    119 THROWIF
-    s2 s4 XCPU
-    CHKSIGNU
-    0 EQINT
-    120 THROWIF
-    DUP
-    1 LESSINT
-    121 THROWIF
-    NOW
-    s2 s0 PUSH2
-    LESS
-    122 THROWIF
-    s0 s1 PUSH2
-    ADD
-    s0 s3 XCHG2
-    LESS
-    123 THROWIF
-    ACCEPT
-    SWAP
-    ADD
-    SWAP
-    NEWC
-    256 STU
-    32 STU
-    ROT
-    STSLICER
-    32 STU
-    ENDC
-    c4 POP
-  }>ELSE<{
-    DROP
-    2 2 BLKDROP2
-    s0 s2 XCHG
-    3142312500 PUSHINT
-    EQUAL
-    IF:<{
-      NOW
-      GREATER
-      124 THROWIF
-      ACCEPT
-      0 PUSHINT
-      24 PUSHINT
-      NEWC
-      6 STU
-      ROT
-      STSLICER
-      OVER
-      STGRAMS
-      107 STU
-      ENDC
-      7 PUSHPOW2
-      SENDRAWMSG
-    }>ELSE<{
-      2DROP
-    }>
-  }>
-}>
-""";
+"""
+
+() recv_external(slice s) {
+  int op = s~load_uint(32);
+  int t = op == 0x9df10277;
+  ifnot (t) | (op == 0xbb4be234)
+  {
+    return ();
+  }
+
+  (int pk, int et, slice addr, int sno) = load_data();
+  if (t)
+  {
+    s~load_uint(64);
+    slice signature = s~load_bits(512);
+    slice ic = s~load_ref().begin_parse();
+    int hash = slice_hash(ic);
+    int lf = ic~load_uint(32);
+    int ns = ic~load_uint(32);
+
+    throw_if(119, ns != sno + 1);
+    throw_if(120, check_signature(hash, signature, pk) == 0);
+    throw_if(121, lf <= 0);
+    int n = now();
+    throw_if(122, et < n);
+    throw_if(123, n + lf < et);
+    accept_message();
+
+    set_data(begin_cell()
+      .store_uint(pk, 256)
+      .store_uint(lf + n, 32)
+      .store_slice(addr)
+      .store_uint(ns, 32)
+    .end_cell());
+  } else
+  {
+    throw_if(124, et > now());
+    accept_message();
+
+    cell msg = begin_cell()
+      .store_uint(0x18, 6)
+      .store_slice(addr)
+      .store_coins(0)
+      .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+    .end_cell();
+
+    send_raw_message(msg, 128);
+  }
+}
 
 int get_seqno() method_id {
-  (_, _, _, int x) = load_data();
-  return x;
+  slice s = get_data().begin_parse().skip_bits(555);
+  return s~load_uint(32);
 }
 
 int get_execution_time() method_id {
-  (_, int x, _, _) = load_data();
-  return x;
+  slice s = get_data().begin_parse().skip_bits(256);
+  return s~load_uint(32);
 }
