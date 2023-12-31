@@ -20,8 +20,13 @@ asm """
   DROP
 """;
 
-() send(slice addr) impure
+() send(int et, slice addr) impure
 asm """
+  SWAP
+  NOW
+  GREATER
+  124 THROWIF
+  ACCEPT
   0 PUSHINT
   24 PUSHINT
   s1 s2 XCHG
@@ -70,9 +75,7 @@ asm """
     .end_cell());
   } else
   {
-    throw_if(124, et > now());
-    accept_message();
-    send(addr);
+    send(et, addr);
   }
 }
 
