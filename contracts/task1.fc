@@ -9,6 +9,7 @@ int now() asm "NOW";
 
 }
 
+
 () logic(slice in) impure inline
 asm """
   32 LDU                  // (op, in)
