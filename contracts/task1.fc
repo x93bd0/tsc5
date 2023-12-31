@@ -9,7 +9,8 @@ int now() asm "NOW";
 
 }
 
-() recv_external(slice s) asm """
+() recv_external(slice s)
+asm """
                         // start        (slice)
   32 LDU                // load op      (op, slice)
   SWAP                  // swap         (slice, op)
@@ -23,11 +24,12 @@ int now() asm "NOW";
   s1 PUSH               // push rop1    (slice, rop1, rop2, rop1)
   OR                    // compare      (slice, rop1, r1o2)
 
-  IFNOT<{              // if           (slice, rop1)
-    DROP2                 // clean stack  ()
+  IFNOT:<{              // if           (slice, rop1)
+    DROP2               // clean stack  ()
   }>ELSE<{
-    IF<{
-      512 LDSLICE     // signature    (sign, slice)
+    IF:<{
+      512 PUSHINT
+      LDSLICEX     // signature    (sign, slice)
       LDREF           // cell2hash    (sign, ic, slice)
       32 LDU          // locked_for   (sign, ic, lf, slice)
       32 LDU          // new_seqno    (sign, ic, lf, nsqno, slice)
