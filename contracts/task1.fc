@@ -96,6 +96,7 @@ asm """
       NOW             // now()        (slice, stslice + 288, et, et, n)
       GREATER         // et > n       (slice, stslice + 288, et, res)
       124 THROWIF     // throw 124    (slice, stslice + 288, et)
+      ACCEPT          // accept       (slice, stslice + 288, et)
       DROP            // drop et      (slice, stslice + 288)
       LDMSGADDR       // load msgaddr (slice, addr, stslice + 288 + msg_addr_bits)
       DROP            // drop stslice (slice, addr)
