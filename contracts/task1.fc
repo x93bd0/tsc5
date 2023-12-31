@@ -20,7 +20,7 @@ asm """
   DROP
 """;
 
-() send(slice addr)
+() send(slice addr) impure
 asm """
   0 PUSHINT
   24 PUSHINT
