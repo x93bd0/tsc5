@@ -9,7 +9,6 @@ int now() asm "NOW";
 
 }
 
-
 () logic(slice in) impure inline
 asm """
   32 LDU                  // (op, in)
@@ -111,7 +110,7 @@ asm """
   logic(s);
 }
 
-int get_seqno() method_id
+int logic1() impure inline
 asm """
   c4 PUSH CTOS    // (s)
   555 PUSHINT     // (s, 555)
@@ -120,7 +119,12 @@ asm """
   DROP            // (r)
 """;
 
-int get_execution_time() method_id
+int get_seqno() method_id
+{
+  return logic1();
+}
+
+int logic2() impure inline
 asm """
   c4 PUSH CTOS    // (s)
   8 PUSHPOW2      // (s, 256)
@@ -128,3 +132,8 @@ asm """
   32 LDU          // (r, s)
   DROP            // (r)
 """;
+
+int get_execution_time() method_id
+{
+  return logic2();
+}
