@@ -83,6 +83,7 @@ asm """
       c4 POP          // set data     (sign)
       DROP            // drop sign    ()
     }>ELSE<{
+      DROP            // drop input
       c4 PUSH         // get storage  (cell)
       CTOS            // parse strg   (stslice)
       8 PUSHPOW2      // load const   (stslice, bits)
