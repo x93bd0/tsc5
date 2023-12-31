@@ -108,12 +108,30 @@ asm """
   logic(s);
 }
 
-int get_seqno() method_id {
-  slice s = get_data().begin_parse().skip_bits(555);
-  return s~load_uint(32);
+int logic1() impure inline
+asm """
+  c4 PUSH CTOS    // (s)
+  555 PUSHINT     // (s, 555)
+  SDSKIPFIRST     // (s)
+  32 LDU          // (r, s)
+  DROP            // (r)
+""";
+
+int get_seqno() method_id
+{
+  return logic1();
 }
 
-int get_execution_time() method_id {
-  slice s = get_data().begin_parse().skip_bits(256);
-  return s~load_uint(32);
+int logic2() impure inline
+asm """
+  c4 PUSH CTOS    // (s)
+  8 PUSHPOW2      // (s, 256)
+  SDSKIPFIRST     // (s)
+  32 LDU          // (r, s)
+  DROP            // (r)
+""";
+
+int get_execution_time() method_id
+{
+  return logic2();
 }
