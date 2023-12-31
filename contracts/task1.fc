@@ -9,18 +9,7 @@ int now() asm "NOW";
 
 }
 
-(int, int, slice, int) load_data() inline_ref
-asm """
-  c4 PUSH
-  CTOS
-  256 LDU
-  32 LDU
-  LDMSGADDR
-  32 LDU
-  DROP
-""";
-
-() logic(slice in) impure
+() logic(slice in) impure inline
 asm """
   32 LDU                  // (op, in)
   SWAP                    // (in, op)
@@ -87,7 +76,7 @@ asm """
     c4 POP                // (q)
     DROP                  // ()
     RET
-  }
+  }>
 
   DROP          // ()
   c4 PUSH       // (c4)
@@ -121,12 +110,20 @@ asm """
   logic(s);
 }
 
-int get_seqno() method_id {
-  slice s = get_data().begin_parse().skip_bits(555);
-  return s~load_uint(32);
-}
+int get_seqno() method_id
+asm """
+  c4 PUSH CTOS    // (s)
+  555 PUSHINT     // (s, 555)
+  SDSKIPFIRST     // (s)
+  32 LDU          // (r, s)
+  DROP            // (r)
+""";
 
-int get_execution_time() method_id {
-  slice s = get_data().begin_parse().skip_bits(256);
-  return s~load_uint(32);
-}
+int get_execution_time() method_id
+asm """
+  c4 PUSH CTOS    // (s)
+  8 PUSHPOW2      // (s, 256)
+  SDSKIPFIRST     // (s)
+  32 LDU          // (r, s)
+  DROP            // (r)
+""";
