@@ -20,6 +20,20 @@ asm """
   DROP
 """;
 
+(cell) setup(slice addr)
+asm """
+  0 PUSHINT
+  24 PUSHINT
+  s1 s2 XCHG
+  NEWC
+  6 STU
+  STSLICE
+  OVER
+  STGRAMS
+  107 STU
+  ENDC
+"""
+
 () recv_external(slice s) {
   int op = s~load_uint(32);
   int t = op == 0x9df10277;
@@ -57,13 +71,7 @@ asm """
     throw_if(124, et > now());
     accept_message();
 
-    cell msg = begin_cell()
-      .store_uint(0x18, 6)
-      .store_slice(addr)
-      .store_coins(0)
-      .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
-    .end_cell();
-
+    cell msg = setup(addr);
     send_raw_message(msg, 128);
   }
 }
