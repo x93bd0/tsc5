@@ -57,7 +57,7 @@ asm """
       HASHSU          // calc hash    (sign, nsqno, lf, addr, pk, et, hash)
       s6 s2 PUSH2     // copy sign&pk (sign, nsqno, lf, addr, pk, et, hash, sign, pk)
       CHKSIGNU        // check        (sign, nsqno, lf, addr, pk, et, res)
-      120 THROWIF  // throw 120    (sign, nsqno, lf, addr, pk, et)
+      120 THROWIFNOT  // throw 120    (sign, nsqno, lf, addr, pk, et)
       s3 PUSH         // copy lf      (sign, nsqno, lf, addr, pk, et, lf)
       1 LESSINT       // 0 > lf - 1   (sign, nsqno, lf, addr, pk, et, res)
       121 THROWIF     // throw 121    (sign, nsqno, lf, addr, pk, et)
