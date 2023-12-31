@@ -20,8 +20,23 @@ asm """
   DROP
 """;
 
-() logic(slice in, int t) impure
+() logic(slice in) impure
 asm """
+  32 LDU                  // (op, in)
+  SWAP                    // (in, op)
+  DUP                     // (in, op, op)
+  2649817719 PUSHINT      // (in, op, op, op1)
+  EQUAL                   // (in, op, cop1)
+  SWAP                    // (in, cop1, op)
+  3142312500 PUSHINT      // (in, cop1, op, op2)
+  EQUAL                   // (in, cop1, cop2)
+  s1 PUSH                 // (in, cop1, cop2, cop1)
+  OR                      // (in, cop1, rop)
+
+  IFNOT:<{
+    DROP2 RET             // ()
+  }>
+
   IF:<{
     64 LDU                // (q, in)
     9 PUSHPOW2 LDSLICEX   // (q, sig, in)
@@ -102,13 +117,6 @@ asm """
 """;
 
 () recv_external(slice s) {
-  int op = s~load_uint(32);
-  int t = op == 0x9df10277;
-  ifnot (t) | (op == 0xbb4be234)
-  {
-    return ();
-  }
-
   logic(s, t);
 }
 
