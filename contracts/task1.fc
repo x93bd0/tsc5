@@ -112,16 +112,6 @@ PROC:<{
 }>
 """;
 
-(int, int, slice, int) load_data() inline_ref
-{
-  slice st = get_data().begin_parse();
-  return (
-    st~load_uint(256), st~load_uint(32),
-    st~load_msg_addr(),
-    st~load_uint(32)
-  );
-}
-
 int get_seqno() method_id {
   (_, _, _, int x) = load_data();
   return x;
