@@ -31,7 +31,7 @@ asm """
     9 PUSHPOW2 LDSLICEX   // (q, sig, in)
     LDREF DROP            // (q, sig, ic)
     CTOS                  // (q, sig, sc)
-    DUP HASHCU            // (q, sig, sc, hash)
+    DUP HASHSU            // (q, sig, sc, hash)
     SWAP                  // (q, sig, hash, c)
     32 LDU                // (q, sig, hash, lf, sc)
     32 LDU                // (q, sig, hash, lf, ns, sc)
