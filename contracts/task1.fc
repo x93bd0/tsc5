@@ -32,7 +32,7 @@ asm """
   STGRAMS
   107 STU
   ENDC
-"""
+""";
 
 () recv_external(slice s) {
   int op = s~load_uint(32);
