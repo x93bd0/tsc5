@@ -5,6 +5,7 @@ int check_signature(int hash, slice signature, int public_key) asm "CHKSIGNU";
 int slice_hash(slice s) asm "HASHSU";
 int now() asm "NOW";
 
+
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
 
 }
