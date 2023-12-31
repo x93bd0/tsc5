@@ -1,112 +1,134 @@
 #include "imports/stdlib.fc";
 
-() send_raw_message(cell msg, int mode) impure asm "SENDRAWMSG";
-int check_signature(int hash, slice signature, int public_key) asm "CHKSIGNU";
-int slice_hash(slice s) asm "HASHSU";
-int now() asm "NOW";
+#include "imports/stdlib.fc";
 
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
 
 }
 
-() recv_external(slice s)
+() algorithm(slice s)
 asm """
-  32 LDU
-  c4 PUSH
-  CTOS
-  256 LDU
-  32 LDU
-  LDMSGADDR
-  32 LDU
-  DROP
-  s0 s4 XCHG
-  64 LDU
-  NIP
-  s5 PUSH
-  2649817719 PUSHINT
-  EQUAL
-  IF:<{
-    s5 POP
-    s0 s4 XCHG
-    9 PUSHPOW2
-    LDSLICEX
-    LDREF
-    DROP
-    CTOS
-    DUP
-    HASHSU
-    SWAP
-    32 LDU
-    32 LDU
-    DROP
-    s0 s6 XCHG
-    INC
-    s6 s(-1) PUXC
-    NEQ
-    119 THROWIF
-    s2 s4 XCPU
-    CHKSIGNU
-    0 EQINT
-    120 THROWIF
-    DUP
-    1 LESSINT
-    121 THROWIF
-    NOW
-    s2 s0 PUSH2
-    LESS
-    122 THROWIF
-    s0 s1 PUSH2
-    ADD
-    s0 s3 XCHG2
-    LESS
-    123 THROWIF
-    ACCEPT
-    SWAP
-    ADD
-    SWAP
-    NEWC
-    256 STU
-    32 STU
-    ROT
-    STSLICER
-    32 STU
-    ENDC
-    c4 POP
+                        // start        (slice)
+  32 LDU                // load op      (op, slice)
+  SWAP                  // swap         (slice, op)
+  DUP                   // dup op       (slice, op, op)
+  3142312500 PUSHINT    // load op2     (slice, op, op, op2)
+  EQUAL                 // cmp op2      (slice, op, rop2)
+  SWAP                  // swap         (slice, rop2, op)
+  2649817719 PUSHINT    // load op1     (slice, rop2, op, op1)
+  EQUAL                 // cmp op1      (slice, rop2, rop1)
+  SWAP                  // swap         (slice, rop1, rop2)
+  s1 PUSH               // push rop1    (slice, rop1, rop2, rop1)
+  OR                    // compare      (slice, rop1, r1o2)
+
+  IFNOT:<{              // if           (slice, rop1)
+    DROP2               // clean stack  ()
   }>ELSE<{
-    DROP
-    2 2 BLKDROP2
-    s0 s2 XCHG
-    3142312500 PUSHINT
-    EQUAL
     IF:<{
-      NOW
-      GREATER
-      124 THROWIF
-      ACCEPT
-      0 PUSHINT
-      24 PUSHINT
-      NEWC
-      6 STU
-      ROT
-      STSLICER
-      OVER
-      STGRAMS
-      107 STU
-      ENDC
-      7 PUSHPOW2
-      SENDRAWMSG
+      // TODO: SWAP addr & lf
+      64 LDU          // load qid     (int, slice)
+      SWAP            // swap values  (slice, int)
+      DROP            // drop val     (slice)
+      9 PUSHPOW2      // push 512     (slice, int)
+      LDSLICEX        // signature    (sign, slice)
+      LDREF           // cell2hash    (sign, ic, slice)
+      32 LDU          // locked_for   (sign, ic, lf, slice)
+      32 LDU          // new_seqno    (sign, ic, lf, nsqno, slice)
+      DROP            // drop slice   (sign, ic, lf, nsqno)
+      c4 PUSH         // perstnt. dt  (sign, ic, lf, nsqno, c4raw)
+      CTOS            //  to slice    (sign, ic, lf, nsqno, sc4)
+      256 LDU         // public_key   (sign, ic, lf, nsqno, pk, sc4)
+      32 LDU          // et           (sign, ic, lf, nsqno, pk, et, sc4)
+      LDMSGADDR       // addr         (sign, ic, lf, nsqno, pk, et, addr, sc4)
+      32 LDU          // seqno        (sign, ic, lf, nsqno, pk, et, addr, sqno, sc4)
+      DROP            // drop slice   (sign, ic, lf, nsqno, pk, et, addr, sqno)
+      SWAP            // swap values  (sign, ic, lf, nsqno, pk, et, sqno, addr)
+      s4 XCHG0        // change stk   (sign, ic, lf, addr, pk, et, sqno, nsqno)
+      DUP             // duplicate    (sign, ic, lf, addr, pk, et, sqno, nsqno, nsqno)
+      s2 XCHG0        // change       (sign, ic, lf, addr, pk, et, nsqno, nsqno, sqno)
+      INC             // increment    (sign, ic, lf, addr, pk, et, nsqno, nsqno, sqno + 1)
+      EQUAL           // compare      (sign, ic, lf, addr, pk, et, nsqno, res)
+      119 THROWIFNOT  // throw 119    (sign, ic, lf, addr, pk, et, nsqno)
+      s5 XCHG0        // change       (sign, nsqno, lf, addr, pk, et, ic)
+      CTOS            // ic -> slice  (sign, nsqno, lf, addr, pk, et, sic)
+      HASHSU          // calc hash    (sign, nsqno, lf, addr, pk, et, hash)
+      s6 s2 PUSH2     // copy sign&pk (sign, nsqno, lf, addr, pk, et, hash, sign, pk)
+      CHKSIGNU        // check        (sign, nsqno, lf, addr, pk, et, res)
+      120 THROWIF  // throw 120    (sign, nsqno, lf, addr, pk, et)
+      s3 PUSH         // copy lf      (sign, nsqno, lf, addr, pk, et, lf)
+      1 LESSINT       // 0 > lf - 1   (sign, nsqno, lf, addr, pk, et, res)
+      121 THROWIF     // throw 121    (sign, nsqno, lf, addr, pk, et)
+      NOW             // now()        (sign, nsqno, lf, addr, pk, et, n)
+      DUP             // dup now()    (sign, nsqno, lf, addr, pk, et, n, n)
+      s2 PUSH         // dup et       (sign, nsqno, lf, addr, pk, et, n, n, et)
+      GREATER         // n > et       (sign, nsqno, lf, addr, pk, et, n, res)
+      122 THROWIF     // throw 122    (sign, nsqno, lf, addr, pk, et, n)
+      s1 s4 XCHG      // change       (sign, nsqno, et, addr, pk, lf, n)
+      ADD             // lf + n       (sign, nsqno, et, addr, pk, lf + n)
+      DUP             // dup lf + n   (sign, nsqno, et, addr, pk, lf + n, lf + n)
+      s4 XCHG0        // change       (sign, nsqno, lf + n, addr, pk, lf + n, et)
+      LESS            // lf + n < et  (sign, nsqno, lf + n, addr, pk, res)
+      123 THROWIF     // throw 123    (sign, nsqno, lf + n, addr, pk)
+      ACCEPT          // accept msg   (sign, nsqno, lf + n, addr, pk)
+      NEWC            // create cell  (sign, nsqno, lf + n, addr, pk, builder)
+      256 STU         // store pk     (sign, nsqno, lf + n, addr, builder)
+      s1 s2 XCHG      // swap         (sign, nsqno, addr, lf + n, builder)
+      32 STU          // store lf + n (sign, nsqno, addr, builder)
+      STSLICE         // store addr   (sign, nsqno, builder)
+      32 STU          // store ns     (sign, builder)
+      ENDC            // end cell     (sign, cell)
+      c4 POP          // set data     (sign)
+      DROP            // drop sign    ()
     }>ELSE<{
-      2DROP
+      DROP            // drop input
+      c4 PUSH         // get storage  (cell)
+      CTOS            // parse strg   (stslice)
+      8 PUSHPOW2      // load const   (stslice, bits)
+      SDSKIPFIRST     // skip first   (stslice + 256)
+      32 LDU          // load et      (et, stslice + 288)
+      SWAP            // swap         (stslice + 288, et)
+      NOW             // now()        (stslice + 288, et, n)
+      GREATER         // et > n       (stslice + 288, res)
+      124 THROWIF     // throw 124    (stslice + 288)
+      ACCEPT          // accept       (stslice + 288)
+      LDMSGADDR       // load msgaddr (addr, stslice + 288 + msg_addr_bits)
+      DROP            // drop stslice (addr)
+      0 PUSHINT       // load zero    (addr, zero)
+      SWAP            // swap         (zero, addr)
+      24 PUSHINT      // load flags   (zero, addr, flags)
+      NEWC            // create cell  (zero, addr, flags, builder)
+      6 STU           // store flags  (zero, addr, builder)
+      STSLICE         // store addr   (zero, builder)
+      OVER            // copy zero    (zero, builder, zero)
+      STGRAMS         // store coins  (zero, builder)
+      107 STU         // store extra  (builder)
+      ENDC            // end cell     (cell)
+      7 PUSHPOW2      // push mode    (cell, mode)
+      SENDRAWMSG      // send         ()
     }>
   }>
 """;
 
+() recv_external(slice s) {
+  algorithm(s);
+}
+
+(int, int, slice, int) load_data() inline_ref
+{
+  slice st = get_data().begin_parse();
+  return (
+    st~load_uint(256), st~load_uint(32),
+    st~load_msg_addr(),
+    st~load_uint(32)
+  );
+}
+
 int get_seqno() method_id {
-  slice s = get_data().begin_parse().skip_bits(555);
-  return s~load_uint(32);
+  (_, _, _, int sno) = load_data();
+  return sno;
 }
 
 int get_execution_time() method_id {
-  slice s = get_data().begin_parse().skip_bits(256);
-  return s~load_uint(32);
+  (_, int et, _, _) = load_data();
+  return et;
 }
