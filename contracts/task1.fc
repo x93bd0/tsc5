@@ -70,7 +70,7 @@ asm """
   EQUAL                 // (sig, hash, lf, addr, pk, et, ns, ns == sno + 1)
   119 THROWIFNOT        // (sig, hash, lf, addr, pk, et, ns)
   s6 XCHG0              // (ns, hash, lf, addr, pk, et, sig)
-  s1 s5 XCHG0           // (ns, et, lf, addr, pk, hash, sig)
+  s1 s5 XCHG            // (ns, et, lf, addr, pk, hash, sig)
   s2 PUSH               // (ns, et, lf, addr, pk, hash, sig, pk)
   CHKSIGNU              // (ns, et, lf, addr, pk, res)
   120 THROWIFNOT        // (ns, et, lf, addr, pk)
