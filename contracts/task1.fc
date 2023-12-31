@@ -20,25 +20,33 @@ asm """
   DROP
 """;
 
-() send(int et, slice addr) impure
+() send() impure
 asm """
-  SWAP
-  NOW
-  GREATER
-  124 THROWIF
-  ACCEPT
-  0 PUSHINT
-  24 PUSHINT
-  s1 s2 XCHG
-  NEWC
-  6 STU
-  STSLICE
-  OVER
-  STGRAMS
-  107 STU
-  ENDC
-  128 PUSHINT
-  SENDRAWMSG
+  c4 PUSH       // (c4)
+  CTOS          // (s4)
+  8 PUSHPOW2    // (s4, 512)
+  SDSKIPFIRST   // (s4)
+  32 LDU        // (et, s4)
+  SWAP          // (s4, et)
+  NOW           // (s4, et, now())
+  GREATER       // (s4, et > now())
+  124 THROWIF   // (s4)
+  ACCEPT        // (s4)
+  LDMSGADDR     // (addr, s4)
+  SWAP          // (s4, addr)
+  0 PUSHINT     // (s4, addr, zero)
+  SWAP          // (s4, zero, addr)
+  24 PUSHINT    // (s4, zero, addr, flags)
+  NEWC          // (s4, zero, addr, flags, b)
+  6 STU         // (s4, zero, addr, b)
+  STSLICE       // (s4, zero, b)
+  OVER          // (s4, zero, b, zero)
+  STGRAMS       // (s4, zero, b)
+  107 STU       // (s4, b)
+  ENDC          // (s4, c)
+  128 PUSHINT   // (s4, c, mode)
+  SENDRAWMSG    // (s4)
+  DROP          // ()
 """;
 
 () recv_external(slice s) {
@@ -49,9 +57,9 @@ asm """
     return ();
   }
 
-  (int pk, int et, slice addr, int sno) = load_data();
   if (t)
   {
+    (int pk, int et, slice addr, int sno) = load_data();
     s~load_uint(64);
     slice signature = s~load_bits(512);
     slice ic = s~load_ref().begin_parse();
@@ -75,7 +83,7 @@ asm """
     .end_cell());
   } else
   {
-    send(et, addr);
+    send();
   }
 }
 
