@@ -117,7 +117,7 @@ asm """
 """;
 
 () recv_external(slice s) {
-  logic(s, t);
+  logic(s);
 }
 
 int get_seqno() method_id {
