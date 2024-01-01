@@ -54,8 +54,6 @@ int version() method_id {
         set_c3(ref.begin_parse().bless());
         st = migrate_one(st);
       }
-
-      wrap_storage(v, st);
     } if (ev != v) { throw(400); }
 
     set_code(ec);
