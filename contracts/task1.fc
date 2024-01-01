@@ -1,136 +1,264 @@
 #include "imports/stdlib.fc";
+forall X -> tuple siv(tuple t, X value, int position) asm "SETINDEXVAR";
 
-() send_raw_message(cell msg, int mode) impure asm "SENDRAWMSG";
-int check_signature(int hash, slice signature, int public_key) asm "CHKSIGNU";
-int slice_hash(slice s) asm "HASHSU";
-int now() asm "NOW";
+const  MASK4 = 15;
+const MASK10 = 1023;
+const MASK64 = 0xffffffffffffffff;
+const  QLMAX = 6375;
+const    BIC = 10;
+const    EBI = 25;
+
+(int, tuple) qlilo_push(tuple q, int E, int V)
+{
+  tuple qchild = q.at(E / QLMAX);
+  int K = E % QLMAX;
+  int SubI = K / EBI;
+  int IntI = K % EBI;
+
+  int TV = qchild.at(SubI);
+  int R = (TV - (((TV >> (IntI * BIC)) & MASK10) << (IntI * BIC))) + (V << (IntI * BIC));
+  qchild = siv(qchild, TV, SubI);
+
+  return (E + 1, siv(q, qchild, E / QLMAX));
+}
+
+(int, int) qlilo_pop
+(tuple q, int S)
+{
+  tuple qchild = q.at(S / QLMAX);
+  int K = S % QLMAX;
+  int SubI = K / EBI;
+  int IntI = K % EBI;
+  return (S + 1, (qchild.at(SubI) & (MASK10 << (BIC * IntI))) >> (BIC * IntI));
+}
+
+(int) qlilo_empty?(int S, int E)
+{
+  return E <= S;
+}
 
 
+{-
+(tuple) matrix_edit(tuple mat, int i, int V)
+inline
+{
+  int TV = mat.at(i / 4);
+  int sI = i % 4;
+
+  TV = (TV - (((TV >> (sI * 64)) & MASK10) << (sI * 64))) + (V << (sI * 64));
+  return siv(mat, TV, sI);
+}
+
+(int) matrix_read(tuple mat, int i)
+{
+  int IntI = i % 4;
+  return (mat.at(i / 4) & (MASK64 << (64 * IntI))) >> (64 * IntI);
+}
+
+(int, int, int, tuple)
+solve (int n, int m, tuple maze) method_id
+{
+  tuple qlilo = empty_tuple();
+  tuple filledT = empty_tuple();
+  repeat (255)
+  { filledT~tpush(0); }
+
+  ;; TODO: Fill it when needed, not at start
+  repeat (((16*n*m) / QLMAX) + 1)
+  {
+    qlilo~tpush(filledT);
+  }
+
+  int Sx = 0; int Sy = 0;
+  int Ex = 0; int Ey = 0;
+
+  int y = 0;
+  int flag = 0;
+
+  while (y < n) & (flag != 2)
+  {
+    tuple temp = mat.at(y);
+    int x = 0;
+    while (x < m) & (flag != 2)
+    {
+      if (maze.at(y)(x) == 83)
+      {
+        Sx = x; Sy = y;
+        flag += 1;
+      }
+      elseif (maze.at(y)(x) == 69)
+      {
+        Ex = x; Ey = y;
+        flag += 1;
+      }
+
+      x += 1;
+    } y += 1;
+  }
+
+  tuple matrix = 0;
+-}
+
+;; UNOPTIMIZED CODE
+
+const MASK = 0xffff;
+forall X -> (tuple) to_tuple (X x) asm "NOP";
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
-
+  
 }
 
-() logic(slice in) impure inline
-asm """
-  32 LDU                  // (op, in)
-  SWAP                    // (in, op)
-  DUP                     // (in, op, op)
-  2649817719 PUSHINT      // (in, op, op, op1)
-  EQUAL                   // (in, op, cop1)
-  SWAP                    // (in, cop1, op)
-  3142312500 PUSHINT      // (in, cop1, op, op2)
-  EQUAL                   // (in, cop1, cop2)
-  s1 PUSH                 // (in, cop1, cop2, cop1)
-  OR                      // (in, cop1, rop)
-
-  IFNOT:<{
-    DROP2 RET             // ()
-  }>
-
-  IF:<{
-    64 LDU                // (q, in)
-    9 PUSHPOW2 LDSLICEX   // (q, sig, in)
-    LDREF DROP            // (q, sig, ic)
-    DUP HASHCU            // (q, sig, ic, hash)
-    SWAP                  // (q, sig, hash, ic)
-    CTOS                  // (q, sig, hash, sc)
-    32 LDU                // (q, sig, hash, lf, sc)
-    32 LDU                // (q, sig, hash, lf, ns, sc)
-    DROP                  // (q, sig, hash, lf, ns)
-    c4 PUSH CTOS          // (q, sig, hash, lf, ns, st)
-    256 LDU               // (q, sig, hash, lf, ns, pk, st)
-    32 LDU                // (q, sig, hash, lf, ns, pk, et, st)
-    LDMSGADDR             // (q, sig, hash, lf, ns, pk, et, addr, st)
-    32 LDU                // (q, sig, hash, lf, ns, pk, et, addr, sno, st)
-    DROP                  // (q, sig, hash, lf, ns, pk, et, addr, sno)
-    s1 s4 XCHG INC        // (q, sig, hash, lf, addr, pk, et, ns, sno + 1)
-    OVER                  // (q, sig, hash, lf, addr, pk, et, ns, sno + 1, ns)
-    EQUAL                 // (q, sig, hash, lf, addr, pk, et, ns, ns == sno + 1)
-    119 THROWIFNOT        // (q, sig, hash, lf, addr, pk, et, ns)
-    s5 s6 s2 XC2PU        // (q, ns, et, lf, addr, pk, hash, sig, pk)
-    CHKSIGNU              // (q, ns, et, lf, addr, pk, res)
-    120 THROWIFNOT        // (q, ns, et, lf, addr, pk)
-    s2 XCHG0              // (q, ns, et, pk, addr, lf)
-    DUP                   // (q, ns, et, pk, addr, lf, lf)
-    1 LESSINT             // (q, ns, et, pk, addr, lf, 1 > lf)
-    121 THROWIF           // (q, ns, et, pk, addr, lf)
-    NOW                   // (q, ns, et, pk, addr, lf, n)
-    DUP                   // (q, ns, et, pk, addr, lf, n, n)
-    s5 PUSH               // (q, ns, et, pk, addr, lf, n, n, et)
-    GREATER               // (q, ns, et, pk, addr, lf, n, n > et)
-    122 THROWIF           // (q, ns, et, pk, addr, lf, n)
-    ADD                   // (q, ns, et, pk, addr, lf + n)
-    DUP                   // (q, ns, et, pk, addr, lf + n, lf + n)
-    s4 XCHG0              // (q, ns, lf + n, pk, addr, lf + n, et)
-    LESS                  // (q, ns, lf + n, pk, addr, lf + n < et)
-    123 THROWIF           // (q, ns, lf + n, pk, addr)
-    ACCEPT                // (q, ns, lf + n, pk, addr)
-    -ROT                  // (q, ns, addr, lf + n, pk)
-    NEWC                  // (q, ns, addr, lf + n, pk, b)
-    256 STU               // (q, ns, addr, lf + n, b)
-    32 STU                // (q, ns, addr, b)
-    STSLICE               // (q, ns, b)
-    32 STU                // (q, b)
-    ENDC                  // (q, c)
-    c4 POP                // (q)
-    DROP                  // ()
-  }>ELSE<{
-    c4 PUSH       // (sl, c4)
-    CTOS          // (sl, s4)
-    8 PUSHPOW2    // (sl, s4, 512)
-    SDSKIPFIRST   // (sl, s4)
-    32 LDU        // (sl, et, s4)
-    SWAP          // (sl, s4, et)
-    NOW           // (sl, s4, et, now())
-    GREATER       // (sl, s4, et > now())
-    124 THROWIF   // (sl, s4)
-    ACCEPT        // (sl, s4)
-    LDMSGADDR     // (sl, addr, s4)
-    SWAP          // (sl, s4, addr)
-    0 PUSHINT     // (sl, s4, addr, zero)
-    SWAP          // (sl, s4, zero, addr)
-    24 PUSHINT    // (sl, s4, zero, addr, flags)
-    NEWC          // (sl, s4, zero, addr, flags, b)
-    6 STU         // (sl, s4, zero, addr, b)
-    STSLICE       // (sl, s4, zero, b)
-    OVER          // (sl, s4, zero, b, zero)
-    STGRAMS       // (sl, s4, zero, b)
-    107 STU       // (sl, s4, b)
-    ENDC          // (sl, s4, c)
-    128 PUSHINT   // (sl, s4, c, mode)
-    SENDRAWMSG    // (sl, s4)
-    DROP2         // ()
-  }>
-""";
-
-() recv_external(slice s) {
-  logic(s);
-}
-
-int logic1() impure inline
-asm """
-  c4 PUSH CTOS    // (s)
-  555 PUSHINT     // (s, 555)
-  SDSKIPFIRST     // (s)
-  32 LDU          // (r, s)
-  DROP            // (r)
-""";
-
-int get_seqno() method_id
+(int)
+make (int d, int p, int x, int f)
+inline
 {
-  return logic1();
+  return (f << 48) + (x << 32) + (p << 16) + d;
 }
 
-int logic2() impure inline
-asm """
-  c4 PUSH CTOS    // (s)
-  8 PUSHPOW2      // (s, 256)
-  SDSKIPFIRST     // (s)
-  32 LDU          // (r, s)
-  DROP            // (r)
-""";
-
-int get_execution_time() method_id
+(int, int, int, int)
+unmakef (int v)
+inline
 {
-  return logic2();
+  return (v & MASK, (v >> 16) & MASK, (v >> 32) & MASK, (v >> 48) & MASK);
+}
+
+(int, int, int)
+unmake (int v) 
+inline
+{
+  return (v & MASK, (v >> 16) & MASK, (v >> 32) & MASK);
+}
+
+(tuple)
+matrix_edit(tuple input, int i, int v)
+impure inline
+{
+  tuple t = input.at(i / 255);
+  t = siv(
+    t, v, i % 255);
+  return siv(input, t, i / 255);
+}
+
+(int)
+matrix_read(tuple input, int i)
+inline
+{
+  return input.at(i / 255).at(i % 255);
+}
+
+(int, int, int, tuple)
+solve (int n, int m, tuple maze) method_id
+{
+  int ts = n * m;
+  tuple tf = empty_tuple();
+
+  repeat (255)
+  {
+    tf~tpush(0);
+  }
+
+  int i = 0; int flag = 0;
+  int sx = 0; int sy = 0;
+  int ex = 0; int ey = 0;
+
+  while (i < n) & (flag < 2)
+  {
+    tuple t = maze.at(i);
+    int j = 0;
+
+    while (j < m) & (flag < 2)
+    {
+      if (t.at(j) == 83)
+      {
+        sx = j; sy = i;
+        flag += 1;
+      } elseif (t.at(j) == 69)
+      {
+        ex = j; ey = i;
+        flag += 1;
+      }
+
+      j += 1;
+    } i += 1;
+  }
+
+  tf = matrix_edit(tf, sy * m + sx, make(1, 0, 0, 0));
+  flag = 0;
+  int ind = 1;
+
+  while (flag == 0)
+  {
+    i = 0;
+    int f = 0;
+
+    while (i < n * m)
+    {
+      int x = matrix_read(tf, i);
+      (int xd, int xp, int xx) = unmake(x);
+
+      if (xd == ind)
+      {
+        f = 1;
+        int ix = i % m;
+        int iy = i / m;
+
+        int l = -1;
+        while (l != 2)
+        {
+          int r = -1;
+          while (r != 2)
+          {
+            if (~((r == l) & (r == 0))) &
+                (l + ix >= 0) &
+                (l + ix <  m) &
+                (r + iy >= 0) &
+                (r + iy <  n)
+            {
+              int u = matrix_read(tf, (r + iy) * m + (l + ix));
+              (int ud, int up, int ux) = unmake(u);
+
+              int pos = maze.at(r + iy).at(l + ix);
+              int ext = pos == 63 ? 1 : 0;
+              int ext2 = pos == 88 ? 1 : 0;
+
+              if (ud == 0)
+              {
+                tf = matrix_edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
+              }
+              elseif (xx + ext2 < ux)
+              {
+                tf = matrix_edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
+              } elseif (xx + ext2 == ux)
+              {
+                if (xp + ext < up)
+                {
+                  tf = matrix_edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
+                } elseif (xp + ext == up) & (xd + 1 < up)
+                {
+                  tf = matrix_edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
+                }
+              }
+            } r += 1;
+          } l += 1;
+        }
+      } i += 1;
+    }
+
+    if (f == 0) {
+      flag = 1;
+    } ind += 1;
+  }
+
+  int raw = matrix_read(tf, ey * m + ex);
+  (int d, int p, int x, int f) = unmakef(raw);
+
+  int td = d;
+  while (td > 2)
+  {
+    int xi = f % m; int yi = f / m;
+    maze = siv(maze, siv(maze.at(yi), 33, xi), yi);
+    int temp = matrix_read(tf, f);
+    (td, f) = (temp & MASK, (temp >> 48) & MASK);
+  }
+
+  return (x, p, d - 1, maze);
 }
