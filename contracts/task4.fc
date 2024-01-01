@@ -128,5 +128,5 @@ solve (int n, int m, tuple maze) method_id
     f = read(tf, f) & MASK;
   }
 
-  return (raw >> 48, (raw >> 32) & MASK, ((d >> 16) & MASK) - 1, maze);
+  return (raw >> 48, (raw >> 32) & MASK, ((raw>> 16) & MASK) - 1, maze);
 }
