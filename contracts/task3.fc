@@ -30,14 +30,13 @@ int version() method_id {
     return ();
   }
 
-  (cell ec, cell mi, cell pl) = (
-    in_msg_body~load_maybe_ref(), in_msg_body~load_dict(), in_msg_body~load_ref());
-
   slice dat = get_data().begin_parse();
   (int v, cell st) = (dat~load_uint(32), dat~load_ref());
 
+  cell ec = in_msg_body~load_maybe_ref();
   if (ev > v)
   {
+    cell mi = in_msg_body~load_dict();
     throw_unless(200, ~(cell_null?(ec)));
     while (ev > v)
     {
@@ -59,7 +58,7 @@ int version() method_id {
   }
 
   st = process_message(
-    st, msg_value, balance, in_msg_full, pl.begin_parse());
+    st, msg_value, balance, in_msg_full, in_msg_body~load_ref().begin_parse());
   wrap_storage(v, st);
 }
 
