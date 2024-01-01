@@ -10,10 +10,11 @@ cell get_storage() {
   return s~load_ref();
 }
 
-() wrap_storage(int version_id, cell storage) impure {
+() wrap_storage(int version_id, cell storage, slice c3) impure {
   set_data(begin_cell()
     .store_uint(version_id, 32)
     .store_ref(storage)
+    .store_slice(c3)
   .end_cell());
 }
 
@@ -26,15 +27,15 @@ int version() method_id {
   int ev = in_msg_body~load_uint(32);
   if (ev == 0)
   {
-    wrap_storage(1, get_data());
+    wrap_storage(1, get_data(), null());
     return ();
   }
 
   (cell ec, cell mi, cell pl) = (
     in_msg_body~load_maybe_ref(), in_msg_body~load_dict(), in_msg_body~load_ref());
 
-  slice dat = get_data().begin_parse();
-  (int v, cell st) = (dat~load_uint(32), dat~load_ref());
+  slice c3 = get_data().begin_parse();
+  (cell st, int v) = (c3~load_ref(), c3~load_uint(32));
 
   if (ev > v)
   {
@@ -53,13 +54,13 @@ int version() method_id {
       }
     } if (ev != v) { throw(400); }
 
-    set_code(ec);
-    set_c3(ec.begin_parse().bless());
+    c3 = ec.begin_parse();
   }
 
+  set_c3(c3.bless());
   st = process_message(
     st, msg_value, balance, in_msg_full, pl.begin_parse());
-  wrap_storage(v, st);
+  wrap_storage(v, st, c3);
 }
 
 ;; <<<<< Custom version-specific code begins
