@@ -90,7 +90,8 @@ solve (int n, int m, tuple maze) method_id
     } i += 1;
   }
 
-  tf = edit(tf, sy * m + sx, make(1, 0, 0, 0));
+  int Si = sy * m + sx;
+  tf = edit(tf, Si, make(1, 0, 0, 0));
   flag = 0;
   int ind = 1;
 
@@ -142,7 +143,7 @@ solve (int n, int m, tuple maze) method_id
   int raw = read(tf, ey * m + ex);
   int f = raw & MASK;
 
-  while (f != 0)
+  while (f != Si)
   {
     int xi = f % m; int yi = f / m;
     maze = siv(maze, siv(maze.at(yi), 33, xi), yi);
