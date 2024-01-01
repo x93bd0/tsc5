@@ -43,13 +43,14 @@ int version() method_id {
     {
       (slice val, int fl) = udict_get?(mi, 32, v);
       if (fl == 0) { throw(400); }
+      v = val~load_uint(32);
       cell ref = val~load_maybe_ref();
 
       if ~ (cell_null?(ref))
       {
         set_c3(ref.begin_parse().bless());
         st = migrate_one(st);
-      } v = val~load_uint(32);
+      }
     } if (ev != v) { throw(400); }
 
     set_code(ec);
