@@ -187,7 +187,7 @@ solve (int n, int m, tuple maze) method_id
     } i += 1;
   }
 
-  tf = edit(tf, sy * m + sx, make(1, 0, 0, 0));
+  tf = matrix_edit(tf, sy * m + sx, make(1, 0, 0, 0));
   flag = 0;
   int ind = 1;
 
@@ -198,7 +198,7 @@ solve (int n, int m, tuple maze) method_id
 
     while (i < n * m)
     {
-      int x = read(tf, i);
+      int x = matrix_read(tf, i);
       (int xd, int xp, int xx) = unmake(x);
 
       if (xd == ind)
@@ -219,7 +219,7 @@ solve (int n, int m, tuple maze) method_id
                 (r + iy >= 0) &
                 (r + iy <  n)
             {
-              int u = read(tf, (r + iy) * m + (l + ix));
+              int u = matrix_read(tf, (r + iy) * m + (l + ix));
               (int ud, int up, int ux) = unmake(u);
 
               int pos = maze.at(r + iy).at(l + ix);
@@ -228,19 +228,19 @@ solve (int n, int m, tuple maze) method_id
 
               if (ud == 0)
               {
-                tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
+                tf = matrix_edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
               }
               elseif (xx + ext2 < ux)
               {
-                tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
+                tf = matrix_edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
               } elseif (xx + ext2 == ux)
               {
                 if (xp + ext < up)
                 {
-                  tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
+                  tf = matrix_edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
                 } elseif (xp + ext == up) & (xd + 1 < up)
                 {
-                  tf = edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
+                  tf = matrix_edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
                 }
               }
             } r += 1;
@@ -254,7 +254,7 @@ solve (int n, int m, tuple maze) method_id
     } ind += 1;
   }
 
-  int raw = read(tf, ey * m + ex);
+  int raw = matrix_read(tf, ey * m + ex);
   (int d, int p, int x, int f) = unmakef(raw);
 
   int td = d;
@@ -262,7 +262,7 @@ solve (int n, int m, tuple maze) method_id
   {
     int xi = f % m; int yi = f / m;
     maze = siv(maze, siv(maze.at(yi), 33, xi), yi);
-    int temp = read(tf, f);
+    int temp = matrix_read(tf, f);
     (td, f) = (temp & MASK, (temp >> 48) & MASK);
   }
 
