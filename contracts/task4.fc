@@ -119,13 +119,14 @@ solve (int n, int m, tuple maze) method_id
                 (r + iy >= 0) &
                 (r + iy <  n)
             {
-              int u = read(tf, (r + iy) * m + (l + ix));
+              int ind = (r + iy) * m + (l + ix);
+              int u = read(tf, ind);
               int pos = maze.at(r + iy).at(l + ix);
-              int neo = ((x + (1 << 16)) & ~(MASK)) + ((pos == 63 ? 1 : 0) << 32) + ((pos == 88 ? 1 : 0) << 48);
+              int neo = x + ((pos == 63 ? 1 : 0) << 32) + ((pos == 88 ? 1 : 0) << 48);
 
               if (u == 0) | (neo < u)
               {
-                tf = edit(tf, (r + iy) * m + (l + ix), neo + iy * m + ix);
+                tf = edit(tf, ind, (neo & ~(MASK)) + iy * m + ix);
               }
             } r += 1;
           } l += 1;
