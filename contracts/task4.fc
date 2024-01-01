@@ -38,6 +38,7 @@ const    EBI = 25;
 }
 
 
+{-
 (tuple) matrix_edit(tuple mat, int i, int V)
 inline
 {
@@ -54,7 +55,6 @@ inline
   return (mat.at(i / 4) & (MASK64 << (64 * IntI))) >> (64 * IntI);
 }
 
-{-
 (int, int, int, tuple)
 solve (int n, int m, tuple maze) method_id
 {
@@ -122,10 +122,27 @@ inline
 }
 
 (int, int, int)
-unmake (int v)
+unmake (int v) 
 inline
 {
   return (v & MASK, (v >> 16) & MASK, (v >> 32) & MASK);
+}
+
+(tuple)
+matrix_edit(tuple input, int i, int v)
+impure inline
+{
+  tuple t = input.at(i / 255);
+  t = siv(
+    t, v, i % 255);
+  return siv(input, t, i / 255);
+}
+
+(int)
+matrix_read(tuple input, int i)
+inline
+{
+  return input.at(i / 255).at(i % 255);
 }
 
 (int, int, int, tuple)
