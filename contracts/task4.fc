@@ -140,16 +140,16 @@ solve (int n, int m, tuple maze) method_id
   }
 
   int raw = read(tf, ey * m + ex);
-  (int d, int p, int x, int f) = unmakef(raw);
+  int f = raw & MASK;
 
-  int td = d;
-  while (td > 2)
+  while (f != 0)
   {
     int xi = f % m; int yi = f / m;
     maze = siv(maze, siv(maze.at(yi), 33, xi), yi);
     int temp = read(tf, f);
-    (td, f) = ((temp >> 16) & MASK, temp & MASK);
+    f= temp & MASK;
   }
 
+  (int d, int p, int x) = unmake(raw);
   return (x, p, d - 1, maze);
 }
