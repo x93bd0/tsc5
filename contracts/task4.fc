@@ -33,8 +33,9 @@ inline
 
 (int, tuple) qlilo_push(tuple q, int E, int V)
 {
-  tuple qchild = q.at(E / QLMAX);
   int K = E % QLMAX;
+  tuple qchild = K == 0 ? empty_tuple() : q.at(E / QLMAX);
+
   int SubI = K / EBI;
   int IntI = K % EBI;
 
@@ -53,6 +54,11 @@ inline
     qchild~tpush(R);
   }
 
+  if (K == 0)
+  {
+    q~tpush(qchild);
+    return (E + 1, q)
+  }
   return (E + 1, siv(q, qchild, E / QLMAX));
 }
 
@@ -97,7 +103,6 @@ method_id
   tuple tf = empty_tuple();
   repeat (255) { tf~tpush(0); }
   tuple ql = empty_tuple();
-  ql~tpush(empty_tuple());
   int i = 0; int flag = 0;
   int sx = 0; int sy = 0;
   int ex = 0; int ey = 0;
