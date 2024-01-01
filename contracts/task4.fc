@@ -147,7 +147,7 @@ solve (int n, int m, tuple maze) method_id
     int xi = f % m; int yi = f / m;
     maze = siv(maze, siv(maze.at(yi), 33, xi), yi);
     int temp = read(tf, f);
-    f= temp & MASK;
+    f = temp & MASK;
   }
 
   (int d, int p, int x) = unmake(raw);
