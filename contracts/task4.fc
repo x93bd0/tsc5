@@ -57,7 +57,7 @@ inline
   if (K == 0)
   {
     q~tpush(qchild);
-    return (E + 1, q)
+    return (E + 1, q);
   }
   return (E + 1, siv(q, qchild, E / QLMAX));
 }
