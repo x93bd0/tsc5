@@ -1,12 +1,35 @@
 #include "imports/stdlib.fc";
 forall X -> tuple siv(tuple t, X value, int position) asm "SETINDEXVAR";
+forall X -> (tuple) to_tuple (X x) asm "NOP";
 
+const   MASK = 0xffff;
 const  MASK4 = 15;
 const MASK10 = 1023;
 const MASK64 = 0xffffffffffffffff;
 const  QLMAX = 6375;
 const    BIC = 10;
 const    EBI = 25;
+
+(int)
+make (int d, int p, int x, int f)
+inline
+{
+  return (f << 48) + (x << 32) + (p << 16) + d;
+}
+
+(int, int, int, int)
+unmakef (int v)
+inline
+{
+  return (v & MASK, (v >> 16) & MASK, (v >> 32) & MASK, (v >> 48) & MASK);
+}
+
+(int, int, int)
+unmake (int v) 
+inline
+{
+  return (v & MASK, (v >> 16) & MASK, (v >> 32) & MASK);
+}
 
 (int, tuple) qlilo_push(tuple q, int E, int V)
 {
@@ -15,9 +38,20 @@ const    EBI = 25;
   int SubI = K / EBI;
   int IntI = K % EBI;
 
-  int TV = qchild.at(SubI);
+  int TV = 0;
+  if (IntI > 0)
+  {
+    TV = qchild.at(SubI);
+  }
+
   int R = (TV - (((TV >> (IntI * BIC)) & MASK10) << (IntI * BIC))) + (V << (IntI * BIC));
-  qchild = siv(qchild, TV, SubI);
+
+  if (IntI > 0)
+  {
+    qchild = siv(qchild, R, SubI);
+  } else {
+    qchild~tpush(R);
+  }
 
   return (E + 1, siv(q, qchild, E / QLMAX));
 }
@@ -54,110 +88,16 @@ inline
   return (mat.at(i / 4) & (MASK64 << (64 * IntI))) >> (64 * IntI);
 }
 
-{-
-(int, int, int, tuple)
-solve (int n, int m, tuple maze) method_id
-{
-  tuple qlilo = empty_tuple();
-  tuple filledT = empty_tuple();
-  repeat (255)
-  { filledT~tpush(0); }
 
-  ;; TODO: Fill it when needed, not at start
-  repeat (((16*n*m) / QLMAX) + 1)
-  {
-    qlilo~tpush(filledT);
-  }
-
-  int Sx = 0; int Sy = 0;
-  int Ex = 0; int Ey = 0;
-
-  int y = 0;
-  int flag = 0;
-
-  while (y < n) & (flag != 2)
-  {
-    tuple temp = mat.at(y);
-    int x = 0;
-    while (x < m) & (flag != 2)
-    {
-      if (maze.at(y)(x) == 83)
-      {
-        Sx = x; Sy = y;
-        flag += 1;
-      }
-      elseif (maze.at(y)(x) == 69)
-      {
-        Ex = x; Ey = y;
-        flag += 1;
-      }
-
-      x += 1;
-    } y += 1;
-  }
-
-  tuple matrix = 0;
--}
-
-;; UNOPTIMIZED CODE
-
-const MASK = 0xffff;
-forall X -> (tuple) to_tuple (X x) asm "NOP";
-() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
-  
-}
-
-(int)
-make (int d, int p, int x, int f)
-inline
-{
-  return (f << 48) + (x << 32) + (p << 16) + d;
-}
-
-(int, int, int, int)
-unmakef (int v)
-inline
-{
-  return (v & MASK, (v >> 16) & MASK, (v >> 32) & MASK, (v >> 48) & MASK);
-}
-
-(int, int, int)
-unmake (int v) 
-inline
-{
-  return (v & MASK, (v >> 16) & MASK, (v >> 32) & MASK);
-}
-
-{-
-(tuple)
-matrix_edit(tuple input, int i, int v)
-impure inline
-{
-  tuple t = input.at(i / 255);
-  t = siv(
-    t, v, i % 255);
-  return siv(input, t, i / 255);
-}
-
-(int)
-matrix_read(tuple input, int i)
-inline
-{
-  return input.at(i / 255).at(i % 255);
-}
--}
 
 (int, int, int, tuple)
-solve (int n, int m, tuple maze) method_id
+solve(int n, int m, tuple maze)
+method_id
 {
-  int ts = n * m;
   tuple tf = empty_tuple();
-
-  repeat (255)
-  {
-    tf~tpush(0);
-  }
-
+  repeat (255) { tf~tpush(0); }
+  tuple ql = empty_tuple();
+  ql~tpush(empty_tuple());
   int i = 0; int flag = 0;
   int sx = 0; int sy = 0;
   int ex = 0; int ey = 0;
@@ -183,71 +123,59 @@ solve (int n, int m, tuple maze) method_id
     } i += 1;
   }
 
+  int S = 0; int E = 0;
+  (E, ql) = qlilo_push(ql, E, sy * m + sx);
   tf = matrix_edit(tf, sy * m + sx, make(1, 0, 0, 0));
-  flag = 0;
-  int ind = 1;
 
-  while (flag == 0)
+  while ~(qlilo_empty?(S, E))
   {
-    i = 0;
-    int f = 0;
+    (S, int i) = qlilo_pop(ql, S);
+    int ix = i % m; int iy = i / m;
+    int x = matrix_read(tf, i);
+    (int xd, int xp, int xx) = unmake(x);
 
-    while (i < n * m)
-    {
-      int x = matrix_read(tf, i);
-      (int xd, int xp, int xx) = unmake(x);
-
-      if (xd == ind)
+    int l = -1;
+    while (l < 2)
+    { int r = -1;
+      while (r < 2)
       {
-        f = 1;
-        int ix = i % m;
-        int iy = i / m;
-
-        int l = -1;
-        while (l != 2)
+        if (~((r == l) & (r == 0))) &
+            (l + ix >= 0) &
+            (l + ix <  m) &
+            (r + iy >= 0) &
+            (r + iy <  n)
         {
-          int r = -1;
-          while (r != 2)
+          int u = matrix_read(tf, (r + iy) * m + (l + ix));
+          (int ud, int up, int ux) = unmake(u);
+
+          int pos = maze.at(r + iy).at(l + ix);
+          int ext = pos == 63 ? 1 : 0;
+          int ext2 = pos == 88 ? 1 : 0;
+
+          if (ud == 0)
           {
-            if (~((r == l) & (r == 0))) &
-                (l + ix >= 0) &
-                (l + ix <  m) &
-                (r + iy >= 0) &
-                (r + iy <  n)
+            tf = matrix_edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
+            (E, ql) = qlilo_push(ql, E, (r + iy) * m + (l + ix));
+          }
+          elseif (xx + ext2 < ux)
+          {
+            tf = matrix_edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
+            (E, ql) = qlilo_push(ql, E, (r + iy) * m + (l + ix));
+          } elseif (xx + ext2 == ux)
+          {
+            if (xp + ext < up)
             {
-              int u = matrix_read(tf, (r + iy) * m + (l + ix));
-              (int ud, int up, int ux) = unmake(u);
-
-              int pos = maze.at(r + iy).at(l + ix);
-              int ext = pos == 63 ? 1 : 0;
-              int ext2 = pos == 88 ? 1 : 0;
-
-              if (ud == 0)
-              {
-                tf = matrix_edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
-              }
-              elseif (xx + ext2 < ux)
-              {
-                tf = matrix_edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
-              } elseif (xx + ext2 == ux)
-              {
-                if (xp + ext < up)
-                {
-                  tf = matrix_edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
-                } elseif (xp + ext == up) & (xd + 1 < up)
-                {
-                  tf = matrix_edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
-                }
-              }
-            } r += 1;
-          } l += 1;
-        }
-      } i += 1;
+              tf = matrix_edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
+              (E, ql) = qlilo_push(ql, E, (r + iy) * m + (l + ix));
+            } elseif (xp + ext == up) & (xd + 1 < up)
+            {
+              tf = matrix_edit(tf, (r + iy) * m + (l + ix), make(xd + 1, xp + ext, xx + ext2, iy * m + ix));
+              (E, ql) = qlilo_push(ql, E, (r + iy) * m + (l + ix));
+            }
+          }
+        } r += 1;
+      } l += 1;
     }
-
-    if (f == 0) {
-      flag = 1;
-    } ind += 1;
   }
 
   int raw = matrix_read(tf, ey * m + ex);
@@ -263,4 +191,9 @@ solve (int n, int m, tuple maze) method_id
   }
 
   return (x, p, d - 1, maze);
+}
+
+;; UNOPTIMIZED CODE
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+  
 }
