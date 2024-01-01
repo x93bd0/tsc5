@@ -90,7 +90,7 @@ solve (int n, int m, tuple maze) method_id
     } i += 1;
   }
 
-  tf = edit(tf, sy * m + sx, make(1, 0, 0, 0));
+  tf = edit(tf, sy * m + sx, 1 << 16);
   flag = 0;
   int ind = 1;
 
@@ -120,14 +120,14 @@ solve (int n, int m, tuple maze) method_id
                 (r + iy >= 0) &
                 (r + iy <  n)
             {
-              int ind = (r + iy) * m + (l + ix);
+              int ind = r * m + l + i;
               int u = read(tf, ind);
               int pos = maze.at(r + iy).at(l + ix);
               int neo = x + (1 << 16) + ((pos == 63 ? 1 : 0) << 32) + ((pos == 88 ? 1 : 0) << 48);
 
               if (u == 0) | (neo < u)
               {
-                tf = edit(tf, ind, (neo & ~(MASK)) + iy * m + ix);
+                tf = edit(tf, ind, (neo & ~(MASK)) + i);
               }
             } r += 1;
           } l += 1;
@@ -136,20 +136,17 @@ solve (int n, int m, tuple maze) method_id
     }
 
     flag = f == 0;
-     ind += 1;
+    ind += 1;
   }
 
   int raw = read(tf, ey * m + ex);
-  (int d, int p, int x, int f) = unmakef(raw);
+  int f = raw & MASK;
 
-  int td = d;
-  while (td > 2)
-  {
+  do {
     int xi = f % m; int yi = f / m;
     maze = siv(maze, siv(maze.at(yi), 33, xi), yi);
-    int temp = read(tf, f);
-    (td, f) = ((temp >> 16) & MASK, temp & MASK);
-  }
+    f = read(tf, f) & MASK;
+  } until (f == 0)
 
-  return (x, p, d - 1, maze);
+  return ((raw >> 48) & MASK, (raw >> 32) & MASK, ((raw >> 16) & MASK) - 1, maze);
 }
