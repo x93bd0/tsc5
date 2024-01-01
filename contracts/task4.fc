@@ -135,9 +135,8 @@ solve (int n, int m, tuple maze) method_id
       } i += 1;
     }
 
-    if (f == 0) {
-      flag = 1;
-    } ind += 1;
+    flag = f == 0;
+     ind += 1;
   }
 
   int raw = read(tf, ey * m + ex);
