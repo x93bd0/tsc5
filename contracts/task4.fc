@@ -101,9 +101,7 @@ solve (int n, int m, tuple maze) method_id
     while (i < n * m)
     {
       int x = read(tf, i);
-      (int xd, int xp, int xx) = unmake(x);
-
-      if (xd == ind)
+      if (((x >> 16) & MASK) == ind)
       {
         f = 1;
         int ix = i % m;
