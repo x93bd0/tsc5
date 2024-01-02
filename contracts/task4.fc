@@ -148,5 +148,5 @@ solve (int n, int m, tuple maze) method_id
     (td, f) = ((temp >> 16) & MASK, temp & MASK);
   } until (3 > td)
 
-  return (x, p, d - 1, maze);
+  return (x, p, d, maze);
 }
