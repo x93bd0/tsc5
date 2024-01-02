@@ -45,30 +45,6 @@ asm """
   SWAP            // (st, i % 255)
   INDEXVAR        // (val)
 """;
-{-
-  return input.at(i / 255).at(i % 255);
--}
-
-(int)
-make (int d, int p, int x, int f)
-inline
-{
-  return (x << 48) + (p << 32) + (d << 16) + f;
-}
-
-(int, int, int, int)
-unmakef (int v)
-inline
-{
-  return ((v >> 16) & MASK, (v >> 32) & MASK, (v >> 48) & MASK, v & MASK);
-}
-
-(int, int, int)
-unmake (int v)
-inline
-{
-  return ((v >> 16) & MASK, (v >> 32) & MASK, (v >> 48) & MASK);
-}
 
 
 (int, int, int, tuple)
@@ -146,7 +122,7 @@ solve (int n, int m, tuple maze) method_id
               int ind = r * m + l + i;
               int u = read(tf, ind);
               int pos = maze.at(r + iy).at(l + ix);
-              int neo = x + (1 << 16) + ((pos == 63 ? 1 : 0) << 32) + ((pos == 88 ? 1 : 0) << 48);
+              int neo = x + (1 << 16) + ((pos == 63) * -1 << 32) + ((pos == 88) * -1 << 48);
 
               if (u == 0) | (neo < u)
               {
