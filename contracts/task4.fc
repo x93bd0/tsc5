@@ -2,6 +2,7 @@
 
 const MASK = 0xffff;
 
+(int, int) dm(int v, int d) asm "DIVMOD";
 forall X -> (tuple) to_tuple (X x) asm "NOP";
 forall X -> tuple siv(tuple t, X value, int position) asm "SETINDEXVAR";
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
@@ -129,9 +130,7 @@ solve (int n, int m, tuple maze) method_id
       if (((x >> 16) & MASK) == ind)
       {
         f = 1;
-        int ix = i % m;
-        int iy = i / m;
-
+        (int iy, int ix) = divmod(i, m);
         int l = -1;
         while (l != 2)
         {
@@ -164,15 +163,17 @@ solve (int n, int m, tuple maze) method_id
   }
 
   int raw = read(tf, ey * m + ex);
-  (int d, int p, int x, int f) = unmakef(raw);
+  int x = (raw >> 48);
+  int p = (raw >> 32) & MASK;
+  int d = (raw >> 16) & MASK;
+  int f = raw & MASK;
 
-  int td = d;
-  while (td > 2)
+  repeat (d - 2)
   {
-    int xi = f % m; int yi = f / m;
+    (int yi, int xi) = divmod(f, m);
     maze = siv(maze, siv(maze.at(yi), 33, xi), yi);
     int temp = read(tf, f);
-    (td, f) = ((temp >> 16) & MASK, temp & MASK);
+    f = read(tf, f) & MASK;
   }
 
   return (x, p, d - 1, maze);
