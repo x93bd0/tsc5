@@ -146,7 +146,7 @@ solve (int n, int m, tuple maze) method_id
     maze = siv(maze, siv(maze.at(yi), 33, xi), yi);
     int temp = read(tf, f);
     (td, f) = ((temp >> 16) & MASK, temp & MASK);
-  } until (3 > td)
+  } until (2 > td)
 
   return (x, p, d, maze);
 }
