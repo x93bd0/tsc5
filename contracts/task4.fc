@@ -21,9 +21,18 @@ impure inline
 (int)
 read(tuple input, int i)
 inline
-{
+asm """
+  // (in, i)
+  8 PUSHPOW2DEC   // (in, i, 255)
+  DIVMOD          // (in, i / 255, i % 255)
+  -ROT            // (i % 255, in, i / 255)
+  INDEXVAR        // (i % 255, st)
+  SWAP            // (st, i % 255)
+  INDEXVAR        // (val)
+""";
+{-
   return input.at(i / 255).at(i % 255);
-}
+-}
 
 (int)
 make (int d, int p, int x, int f)
