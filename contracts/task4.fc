@@ -1,6 +1,7 @@
 #include "imports/stdlib.fc";
 
 const MASK = 0xffff;
+const MASK64 = 0xffffffffffffffff;
 
 (int, int) dm(int v, int d) asm "DIVMOD";
 forall X -> (tuple) to_tuple (X x) asm "NOP";
@@ -46,6 +47,23 @@ asm """
   INDEXVAR        // (val)
 """;
 
+(int) ifLogic(int m, int x, int l, int n, int y, int r)
+inline
+asm """
+  ADD DUP
+  0 GEQINT
+  -ROT
+  GREATER
+  AND
+  s3 XCHG0
+  -ROT
+  ADD DUP
+  0 GEQINT
+  -ROT
+  GREATER
+  AND AND
+""";
+
 
 (int, int, int, tuple)
 solve (int n, int m, tuple maze) method_id
@@ -59,7 +77,7 @@ solve (int n, int m, tuple maze) method_id
     tuple temp = empty_tuple();
     repeat (min(ts, 255))
     {
-      temp~tpush(0);
+      temp~tpush(MASK64);
     }
 
     ts -= 255;
@@ -113,18 +131,14 @@ solve (int n, int m, tuple maze) method_id
           int r = -1;
           while (r != 2)
           {
-            if (~((r == l) & (r == 0))) &
-                (l + ix <  m) &
-                (l + ix >= 0) &
-                (r + iy >= 0) &
-                (r + iy <  n)
+            if (ifLogic(n, iy, r, m, ix, l))
             {
               int ind = r * m + l + i;
               int u = read(tf, ind);
               int pos = maze.at(r + iy).at(l + ix);
               int neo = x + (1 << 16) + ((pos == 63) * -1 << 32) + ((pos == 88) * -1 << 48);
 
-              if (u == 0) | (neo < u)
+              if (neo < u)
               {
                 tf = edit(tf, ind, (neo & ~(MASK)) + i);
               }
