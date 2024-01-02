@@ -11,12 +11,26 @@ forall X -> tuple siv(tuple t, X value, int position) asm "SETINDEXVAR";
 (tuple)
 edit(tuple input, int i, int v)
 impure inline
-{
+asm """
+  // (in, i, v)
+  SWAP            // (in, v, i)
+  8 PUSHPOW2DEC   // (in, v, i, 255)
+  DIVMOD          // (in, v, i / 255, i % 255)
+  s3 s1 PUSH2     // (in, v, i / 255, i % 255, in, i / 255)
+  INDEXVAR        // (in, v, i / 255, i % 255, st)
+  -ROT            // (in, v, st, i / 255, i % 255)
+  s1 s3 XCHG      // (in, i / 255, st, v, i % 255)
+  SETINDEXVAR     // (in, i / 255, st)
+  SWAP            // (in, st, i / 255)
+  SETINDEXVAR     // (out)
+""";
+
+{-
   tuple t = input.at(i / 255);
   t = siv(
     t, v, i % 255);
   return siv(input, t, i / 255);
-}
+-}
 
 (int)
 read(tuple input, int i)
