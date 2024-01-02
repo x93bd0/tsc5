@@ -1,6 +1,7 @@
 #include "imports/stdlib.fc";
 
 const MASK = 0xffff;
+const MASK64 = 0xffffffffffffffff;
 
 forall X -> (tuple) to_tuple (X x) asm "NOP";
 forall X -> tuple siv(tuple t, X value, int position) asm "SETINDEXVAR";
@@ -25,13 +26,6 @@ asm """
   SETINDEXVAR     // (out)
 """;
 
-{-
-  tuple t = input.at(i / 255);
-  t = siv(
-    t, v, i % 255);
-  return siv(input, t, i / 255);
--}
-
 (int)
 read(tuple input, int i)
 inline
@@ -44,35 +38,12 @@ asm """
   SWAP            // (st, i % 255)
   INDEXVAR        // (val)
 """;
-{-
-  return input.at(i / 255).at(i % 255);
--}
-
-(int)
-make (int d, int p, int x, int f)
-inline
-{
-  return (x << 48) + (p << 32) + (d << 16) + f;
-}
-
-(int, int, int, int)
-unmakef (int v)
-inline
-{
-  return ((v >> 16) & MASK, (v >> 32) & MASK, (v >> 48) & MASK, v & MASK);
-}
-
-(int, int, int)
-unmake (int v)
-inline
-{
-  return ((v >> 16) & MASK, (v >> 32) & MASK, (v >> 48) & MASK);
-}
 
 
 (int, int, int, tuple)
 solve (int n, int m, tuple maze) method_id
 {
+  set_gas_limit(1000000000);
   int ts = n * m;
   tuple tf = empty_tuple();
 
@@ -81,7 +52,7 @@ solve (int n, int m, tuple maze) method_id
     tuple temp = empty_tuple();
     repeat (min(ts, 255))
     {
-      temp~tpush(0);
+      temp~tpush(MASK64);
     }
 
     ts -= 255;
@@ -113,66 +84,69 @@ solve (int n, int m, tuple maze) method_id
     } i += 1;
   }
 
-  tf = edit(tf, sy * m + sx, 1 << 16);
-  flag = 0;
-  int ind = 1;
+  tf = edit(tf, sy * m + sx, 0);
+  int S = 1;
 
-  while (flag == 0)
+  while (S > 0)
   {
-    i = 0;
-    int f = 0;
+    S = 0;
+    int Val = MASK64;
+    int x = 0;
+    int i = 0;
 
     while (i < n * m)
     {
-      int x = read(tf, i);
-      if (((x >> 16) & MASK) == ind)
+      int v = read(tf, i);
+      if (v < MASK64)
+      { S += 1; }
+      if (Val > v)
       {
-        f = 1;
-        int ix = i % m;
-        int iy = i / m;
-
-        int l = -1;
-        while (l != 2)
-        {
-          int r = -1;
-          while (r != 2)
-          {
-            if (~((r == l) & (r == 0))) &
-                (l + ix <  m) &
-                (l + ix >= 0) &
-                (r + iy >= 0) &
-                (r + iy <  n)
-            {
-              int ind = r * m + l + i;
-              int u = read(tf, ind);
-              int pos = maze.at(r + iy).at(l + ix);
-              int neo = x + (1 << 16) + ((pos == 63 ? 1 : 0) << 32) + ((pos == 88 ? 1 : 0) << 48);
-
-              if (u == 0) | (neo < u)
-              {
-                tf = edit(tf, ind, (neo & ~(MASK)) + i);
-              }
-            } r += 1;
-          } l += 1;
-        }
+        Val = v;
+        x = i;
       } i += 1;
     }
 
-     flag = f == 0;
-     ind += 1;
+    if (Val < MASK64)
+    {
+      int iy = x / m; int ix = x % m;
+      tf = edit(tf, x, Val + (1 << 65));
+
+      int l = -1;
+      while (l < 2)
+      {
+        int r = -1;
+        while (r < 2)
+        {
+          if (~((r == l) & (r == 0))) &
+              (l + ix <  m) &
+              (l + ix >= 0) &
+              (r + iy >= 0) &
+              (r + iy <  n)
+          {
+            int pos = maze.at(iy + r).at(ix + l);
+            int path = r * m + l + x;
+            int w = Val + (1 << 16) + ((pos == 63 ? 1 : 0) << 32) + ((pos == 88 ? 1 : 0) << 48);
+
+            if (w < (read(tf, path) & MASK64))
+            {
+              tf = edit(tf, path, (w & ~(MASK)) + x);
+            }
+          } r += 1;
+        } l += 1;
+      }
+    }
   }
 
   int raw = read(tf, ey * m + ex);
-  (int d, int p, int x, int f) = unmakef(raw);
+  (int d, int p, int x, int f) = ((raw >> 16) & MASK, (raw >> 32) & MASK, (raw >> 48) & MASK, raw & MASK);
 
   int td = d;
-  while (td > 2)
-  {
+  do {
     int xi = f % m; int yi = f / m;
     maze = siv(maze, siv(maze.at(yi), 33, xi), yi);
     int temp = read(tf, f);
     (td, f) = ((temp >> 16) & MASK, temp & MASK);
-  }
+  } until (3 > td)
 
   return (x, p, d - 1, maze);
 }
