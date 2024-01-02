@@ -25,13 +25,6 @@ asm """
   SETINDEXVAR     // (out)
 """;
 
-{-
-  tuple t = input.at(i / 255);
-  t = siv(
-    t, v, i % 255);
-  return siv(input, t, i / 255);
--}
-
 (int)
 read(tuple input, int i)
 inline
@@ -44,36 +37,13 @@ asm """
   SWAP            // (st, i % 255)
   INDEXVAR        // (val)
 """;
-{-
-  return input.at(i / 255).at(i % 255);
--}
-
-(int)
-make (int d, int p, int x, int f)
-inline
-{
-  return (x << 48) + (p << 32) + (d << 16) + f;
-}
-
-(int, int, int, int)
-unmakef (int v)
-inline
-{
-  return ((v >> 16) & MASK, (v >> 32) & MASK, (v >> 48) & MASK, v & MASK);
-}
-
-(int, int, int)
-unmake (int v)
-inline
-{
-  return ((v >> 16) & MASK, (v >> 32) & MASK, (v >> 48) & MASK);
-}
 
 
 (int, int, int, tuple)
 solve (int n, int m, tuple maze) method_id
 {
-  int ts = n * m;
+  int Ts = n * m;
+  int ts = Ts;
   tuple tf = empty_tuple();
 
   repeat ((ts / 255) + 1)
@@ -122,7 +92,7 @@ solve (int n, int m, tuple maze) method_id
     i = 0;
     int f = 0;
 
-    while (i < n * m)
+    while (i < Ts)
     {
       int x = read(tf, i);
       if (((x >> 16) & MASK) == ind)
@@ -163,16 +133,15 @@ solve (int n, int m, tuple maze) method_id
   }
 
   int raw = read(tf, ey * m + ex);
-  (int d, int p, int x, int f) = unmakef(raw);
+  (int d, int p, int x, int f) = ((raw >> 16) & MASK, (raw >> 32) & MASK, (raw >> 48) & MASK, raw & MASK);
 
   int td = d;
-  while (td > 2)
-  {
+  do {
     int xi = f % m; int yi = f / m;
     maze = siv(maze, siv(maze.at(yi), 33, xi), yi);
     int temp = read(tf, f);
     (td, f) = ((temp >> 16) & MASK, temp & MASK);
-  }
+  } until (3 > td)
 
   return (x, p, d - 1, maze);
 }
