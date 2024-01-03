@@ -27,7 +27,7 @@ int version() method_id {
   if (ev == 0)
   {
     set_data(begin_cell()
-      .store_uint(1)
+      .store_uint(1, 32)
       .store_ref(get_data())
     .end_cell())
     return ();
@@ -63,7 +63,7 @@ int version() method_id {
   st = process_message(
     st, msg_value, balance, in_msg_full, pl.begin_parse());
   set_data(begin_cell()
-    .store_uint(v)
+    .store_uint(v, 32)
     .store_ref(st)
   .end_cell());
 }
