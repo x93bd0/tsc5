@@ -26,7 +26,10 @@ int version() method_id {
   int ev = in_msg_body~load_uint(32);
   if (ev == 0)
   {
-    wrap_storage(get_data(), 1);
+    set_data(begin_cell()
+      .store_uint(1)
+      .store_ref(get_data())
+    .end_cell())
     return ();
   }
 
@@ -38,7 +41,7 @@ int version() method_id {
 
   if (ev > v)
   {
-    throw_unless(200, ~(cell_null?(ec)));
+    throw_if(200, cell_null?(ec));
     while (ev > v)
     {
       (slice val, int fl) = udict_get?(mi, 32, v);
@@ -46,7 +49,7 @@ int version() method_id {
       v = val~load_uint(32);
       cell ref = val~load_maybe_ref();
 
-      if ~ (cell_null?(ref))
+      ifnot (cell_null?(ref))
       {
         set_c3(ref.begin_parse().bless());
         st = migrate_one(st);
@@ -59,7 +62,10 @@ int version() method_id {
 
   st = process_message(
     st, msg_value, balance, in_msg_full, pl.begin_parse());
-  wrap_storage(st, v);
+  set_data(begin_cell()
+    .store_uint(v)
+    .store_ref(st)
+  .end_cell());
 }
 
 ;; <<<<< Custom version-specific code begins
