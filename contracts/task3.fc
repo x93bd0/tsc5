@@ -29,7 +29,7 @@ int version() method_id {
     set_data(begin_cell()
       .store_uint(1, 32)
       .store_ref(get_data())
-    .end_cell())
+    .end_cell());
     return ();
   }
 
