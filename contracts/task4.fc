@@ -126,13 +126,15 @@ solve (int n, int m, tuple maze) method_id
     int i = x & MASK;
     (int iy, int ix) = divmod(i, m);
 
-    int l = -1;
-    while (l != 2)
+    int l = (ix > 0);
+    int cl = (-(ix + 1 < m));
+    while (l <= cl)
     {
-      int r = -1;
-      while (r != 2)
+      int r = (iy > 0);
+      int c = (-(iy + 1 < n));
+      while (r <= c)
       {
-        if (ifLogic(n, iy, r, m, ix, l))
+        if ~((l == r) & (r == 0))
         {
           int ind = r * m + l + i;
           int u = read(tf, ind);
