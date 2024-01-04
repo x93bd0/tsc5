@@ -110,46 +110,48 @@ solve (int n, int m, tuple maze) method_id
   }
 
   tf = edit(tf, sy * m + sx, 1 << 16);
-  flag = 0;
-  int ind = 1;
+  tuple queue = to_tuple([sy * m + sx]);
+  tuple next_queue = empty_tuple();
+  int s = 0; int e = 1;
+  int ne = 0;
 
-  while (flag == 0)
+  while (e > 0)
   {
-    i = 0;
-    int f = 0;
-
-    while (i < Ts)
+    while (s < e)
     {
+      int i = queue.at(s);
       int x = read(tf, i);
-      if (((x >> 16) & MASK) == ind)
-      {
-        f = 1;
-        (int iy, int ix) = divmod(i, m);
-        int l = -1;
-        while (l != 2)
-        {
-          int r = -1;
-          while (r != 2)
-          {
-            if (ifLogic(n, iy, r, m, ix, l))
-            {
-              int ind = r * m + l + i;
-              int u = read(tf, ind);
-              int pos = maze.at(r + iy).at(l + ix);
-              int neo = x + (1 << 16) + ((pos == 63) * -1 << 32) + ((pos == 88) * -1 << 48);
 
-              if (neo < u)
-              {
-                tf = edit(tf, ind, (neo & ~(MASK)) + i);
-              }
-            } r += 1;
-          } l += 1;
-        }
-      } i += 1;
+      (int iy, int ix) = divmod(i, m);
+      int l = -1;
+      while (l != 2)
+      {
+        int r = -1;
+        while (r != 2)
+        {
+          if (ifLogic(n, iy, r, m, ix, l))
+          {
+            int ind = r * m + l + i;
+            int u = read(tf, ind);
+            int pos = maze.at(r + iy).at(l + ix);
+            int neo = x + (1 << 16) + ((pos == 63) * -1 << 32) + ((pos == 88) * -1 << 48);
+
+            if (neo < u)
+            {
+              tf = edit(tf, ind, (neo & ~(MASK)) + i);
+              ne += 1; next_queue~tpush(ind);
+            }
+          } r += 1;
+        } l += 1;
+      }
+
+      s += 1;
     }
 
-     flag = f == 0;
-     ind += 1;
+    s = 0; e = ne;
+    ne = 0;
+    queue = next_queue;
+    next_queue = empty_tuple();
   }
 
   int raw = read(tf, ey * m + ex);
