@@ -3,9 +3,11 @@
 const MASK = 0xffff;
 const MASK64 = 0xffffffffffffffff;
 
+(int) pow2(int) asm "POW2";
 (int, int) dm(int v, int d) asm "DIVMOD";
 forall X -> (tuple) to_tuple (X x) asm "NOP";
 forall X -> tuple siv(tuple t, X value, int position) asm "SETINDEXVAR";
+
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
   
 }
@@ -68,6 +70,10 @@ asm """
 (int, int, int, tuple)
 solve (int n, int m, tuple maze) method_id
 {
+  set_gas_limit(100000000);
+  cell dict = new_dict();
+  udict_set(dict, 64, 1, null());
+
   int Ts = n * m;
   int ts = Ts;
   tuple tf = empty_tuple();
@@ -109,64 +115,61 @@ solve (int n, int m, tuple maze) method_id
     } i += 1;
   }
 
-  tf = edit(tf, sy * m + sx, 1 << 16);
-  tuple queue = to_tuple([sy * m + sx]);
-  tuple next_queue = empty_tuple();
-  int s = 0; int e = 1;
-  int ne = 0;
+  cell priority_queue = new_dict();
+  priority_queue~udict_set(64, pow2(16) + sy * m + sx, begin_cell().end_cell().begin_parse());
+  tf = edit(tf, sy * m + sx, pow2(16));
 
-  while (e > 0)
+  int d = 0;
+  int p = 0;
+  int X = 0;
+
+  int ie = ey * m + ex;
+  (int x, slice val, int flag) = priority_queue.udict_get_min?(64);
+  while (flag)
   {
-    while (s < e)
+    priority_queue~udict_delete?(64, x);
+    int i = x & MASK;
+    (int iy, int ix) = divmod(i, m);
+
+    int l = -1;
+    while (l != 2)
     {
-      int i = queue.at(s);
-      int x = read(tf, i);
-
-      (int iy, int ix) = divmod(i, m);
-      int l = -1;
-      while (l != 2)
+      int r = -1;
+      while (r != 2)
       {
-        int r = -1;
-        while (r != 2)
+        if (ifLogic(n, iy, r, m, ix, l))
         {
-          if (ifLogic(n, iy, r, m, ix, l))
+          int ind = r * m + l + i;
+          int u = read(tf, ind);
+          int pos = maze.at(r + iy).at(l + ix);
+          int neo = x + (1 << 16) + ((pos == 63) * -1 << 32) + ((pos == 88) * -1 << 48);
+
+          if (neo < u)
           {
-            int ind = r * m + l + i;
-            int u = read(tf, ind);
-            int pos = maze.at(r + iy).at(l + ix);
-            int neo = x + (1 << 16) + ((pos == 63) * -1 << 32) + ((pos == 88) * -1 << 48);
-
-            if (neo < u)
+            if (ie == ind)
             {
-              tf = edit(tf, ind, (neo & ~(MASK)) + i);
-              ne += 1; next_queue~tpush(ind);
+              d = (neo >> 16) & MASK;
+              p = (neo >> 32) & MASK;
+              X = (neo >> 48) & MASK;
             }
-          } r += 1;
-        } l += 1;
-      }
 
-      s += 1;
+            tf = edit(tf, ind, (neo & ~(MASK)) + i);
+            priority_queue~udict_set(64, (neo & ~(MASK)) + ind, val);
+          }
+        } r += 1;
+      } l += 1;
     }
 
-    s = 0; e = ne;
-    ne = 0;
-    queue = next_queue;
-    next_queue = empty_tuple();
+    (x, val, flag) = priority_queue.udict_get_min?(64);
   }
 
-  int raw = read(tf, ey * m + ex);
-  int x = (raw >> 48);
-  int p = (raw >> 32) & MASK;
-  int d = (raw >> 16) & MASK;
-  int f = raw & MASK;
-
+  int f = read(tf, ey * m + ex) & MASK;
   repeat (d - 2)
   {
     (int yi, int xi) = divmod(f, m);
     maze = siv(maze, siv(maze.at(yi), 33, xi), yi);
-    int temp = read(tf, f);
     f = read(tf, f) & MASK;
   }
 
-  return (x, p, d - 1, maze);
+  return (X, p, d - 1, maze);
 }
