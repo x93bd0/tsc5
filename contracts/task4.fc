@@ -150,10 +150,20 @@ solve (int n, int m, tuple maze) method_id
               d = (neo >> 16) & MASK;
               p = (neo >> 32) & MASK;
               X = (neo >> 48) & MASK;
-            }
 
-            tf = edit(tf, ind, (neo & ~(MASK)) + i);
-            priority_queue~udict_set(64, (neo & ~(MASK)) + ind, val);
+              int f = i;
+              repeat (d - 2)
+              {
+                (int yi, int xi) = divmod(f, m);
+                maze = siv(maze, siv(maze.at(yi), 33, xi), yi);
+                f = read(tf, f) & MASK;
+              }
+
+              return (X, p, d - 1, maze);
+            } else {
+              tf = edit(tf, ind, (neo & ~(MASK)) + i);
+              priority_queue~udict_set(64, (neo & ~(MASK)) + ind, val);
+            }
           }
         } r += 1;
       } l += 1;
@@ -162,13 +172,5 @@ solve (int n, int m, tuple maze) method_id
     (x, val, flag) = priority_queue.udict_get_min?(64);
   }
 
-  int f = read(tf, ey * m + ex) & MASK;
-  repeat (d - 2)
-  {
-    (int yi, int xi) = divmod(f, m);
-    maze = siv(maze, siv(maze.at(yi), 33, xi), yi);
-    f = read(tf, f) & MASK;
-  }
-
-  return (X, p, d - 1, maze);
+  return (-1, 0, 0, maze);
 }
