@@ -70,7 +70,6 @@ asm """
 (int, int, int, tuple)
 solve (int n, int m, tuple maze) method_id
 {
-  set_gas_limit(100000000);
   cell dict = new_dict();
   udict_set(dict, 64, 1, null());
 
