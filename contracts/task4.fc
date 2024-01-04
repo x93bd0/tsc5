@@ -2,6 +2,7 @@
 
 const MASK = 0xffff;
 const MASK64 = 0xffffffffffffffff;
+const NMASK = MASK64 - MASK;
 
 (int) pow2(int) asm "POW2";
 (int, int) dm(int v, int d) asm "DIVMOD";
@@ -114,8 +115,9 @@ solve (int n, int m, tuple maze) method_id
     } i += 1;
   }
 
+  slice nullSlice = begin_cell().end_cell().begin_parse();
   cell priority_queue = new_dict();
-  priority_queue~udict_set(64, pow2(16) + sy * m + sx, begin_cell().end_cell().begin_parse());
+  priority_queue~udict_set(64, pow2(16) + sy * m + sx, nullSlice);
   tf = edit(tf, sy * m + sx, pow2(16));
 
   int ie = ey * m + ex;
@@ -126,27 +128,29 @@ solve (int n, int m, tuple maze) method_id
     int i = x & MASK;
     (int iy, int ix) = divmod(i, m);
 
-    int l = (ix > 0);
-    int cl = (-(ix + 1 < m));
-    while (l <= cl)
+    int r = (iy > 0);
+    int c = (-(iy + 1 < n));
+    while (r <= c)
     {
-      int r = (iy > 0);
-      int c = (-(iy + 1 < n));
-      while (r <= c)
+      int l = (ix > 0);
+      int cl = (-(ix + 1 < m));
+      tuple mat = maze.at(r + iy);
+      while (l <= cl)
       {
         if ~((l == r) & (r == 0))
         {
           int ind = r * m + l + i;
           int u = read(tf, ind);
-          int pos = maze.at(r + iy).at(l + ix);
+          int pos = mat.at(l + ix);
           int neo = x + (1 << 16) + ((pos == 63) * -1 << 32) + ((pos == 88) * -1 << 48);
 
           if (neo < u)
           {
             if (ie != ind)
             {
-              tf = edit(tf, ind, (neo & ~(MASK)) + i);
-              priority_queue~udict_set(64, (neo & ~(MASK)) + ind, val);
+              int nval = (neo & ~(MASK));
+              tf = edit(tf, ind, nval + i);
+              priority_queue~udict_set(64, nval + ind, val);
             } else
             {
               int d = (neo >> 16) & MASK;
@@ -163,8 +167,8 @@ solve (int n, int m, tuple maze) method_id
               return (X, p, d - 1, maze);
             }
           }
-        } r += 1;
-      } l += 1;
+        } l += 1;
+      } r += 1;
     }
 
     (x, val, flag) = priority_queue.udict_get_next?(64, x);
