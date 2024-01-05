@@ -3,15 +3,13 @@
 int cell_null?(cell c) asm "ISNULL";
 (slice, int) udict_get?(cell dict, int key_len, int index) asm(index dict key_len) "DICTUGET" "NULLSWAPIFNOT";
 int slice_empty?(slice s) asm "SEMPTY";
+slice ldreftos(slice i) asm "LDREFRTOS";
 
 
-cell get_storage()
-asm """
-  c4 PUSH      // (c4)
-  CTOS         // (s4)
-  LDREF        // (ref, s4)
-  DROP         // (ref)
-""";
+cell get_storage() {
+  slice s = get_data().begin_parse();
+  return s~load_ref();
+}
 
 () wrap_storage(cell storage, int version_id) impure {
   set_data(begin_cell()
@@ -20,13 +18,10 @@ asm """
   .end_cell());
 }
 
-int version() method_id
-asm """
-  c4 PUSH      // (c4)
-  CTOS         // (s4)
-  32 LDU       // (v, s4)
-  DROP         // (v)
-""";
+int version() method_id {
+  slice cs = get_data().begin_parse();
+  return cs~load_uint(32);
+}
 
 () recv_internal(int msg_value, int balance, cell in_msg_full, slice in_msg_body) impure {
   int ev = in_msg_body~load_uint(32);
@@ -39,8 +34,8 @@ asm """
     return ();
   }
 
-  (cell ec, cell mi, cell pl) = (
-    in_msg_body~load_maybe_ref(), in_msg_body~load_dict(), in_msg_body~load_ref());
+  (cell ec, cell mi) = (
+    in_msg_body~load_maybe_ref(), in_msg_body~load_dict());
 
   slice dat = get_data().begin_parse();
   (int v, cell st) = (dat~load_uint(32), dat~load_ref());
@@ -68,7 +63,7 @@ asm """
 
   set_data(begin_cell()
     .store_uint(v, 32)
-    .store_ref(process_message(st, msg_value, balance, in_msg_full, pl.begin_parse()))
+    .store_ref(process_message(st, msg_value, balance, in_msg_full, ldreftos(in_msg_body)))
   .end_cell());
 }
 
