@@ -54,13 +54,13 @@ int version() method_id {
         set_c3(ref.begin_parse().bless());
         st = migrate_one(st);
       }
-    } if (ev != v) { throw(400); }
+    } throw_if(400, ev != v);
 
     set_code(ec);
     set_c3(ec.begin_parse().bless());
   }
-  if (ev != v) {throw(400);}
 
+  throw_if(400, ev != v);
   st = process_message(
     st, msg_value, balance, in_msg_full, pl.begin_parse());
   set_data(begin_cell()
