@@ -60,12 +60,9 @@ int version() method_id {
     set_c3(ec.begin_parse().bless());
   }
 
-  throw_if(400, ev != v);
-  st = process_message(
-    st, msg_value, balance, in_msg_full, pl.begin_parse());
   set_data(begin_cell()
     .store_uint(v, 32)
-    .store_ref(st)
+    .store_ref(process_message(st, msg_value, balance, in_msg_full, pl.begin_parse()))
   .end_cell());
 }
 
