@@ -96,7 +96,7 @@ asm """
     STGRAMS       // (q, sl, s4, zero, b)
     107 STU       // (q, sl, s4, b)
     ENDC          // (q, sl, s4, c)
-    128 PUSHINT   // (q, sl, s4, c, mode)
+    7 PUSHPOW2    // (q, sl, s4, c, mode)
     SENDRAWMSG    // (q, sl, s4)
     3 BLKDROP     // ()
   }>
