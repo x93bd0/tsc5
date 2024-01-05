@@ -59,6 +59,7 @@ int version() method_id {
     set_code(ec);
     set_c3(ec.begin_parse().bless());
   }
+  if (ev != v) {throw(400);}
 
   st = process_message(
     st, msg_value, balance, in_msg_full, pl.begin_parse());
