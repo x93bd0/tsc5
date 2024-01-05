@@ -3,7 +3,7 @@
 int cell_null?(cell c) asm "ISNULL";
 (slice, int) udict_get?(cell dict, int key_len, int index) asm(index dict key_len) "DICTUGET" "NULLSWAPIFNOT";
 int slice_empty?(slice s) asm "SEMPTY";
-slice ldreftos(slice i) asm "LDREFRTOS";
+(slice, slice) ldreftos(slice i) asm "LDREFRTOS";
 
 
 cell get_storage() {
@@ -46,7 +46,8 @@ int version() method_id {
     while (ev > v)
     {
       (slice val, int fl) = udict_get?(mi, 32, v);
-      if (fl == 0) { throw(400); }
+      throw_unless(400, fl);
+
       v = val~load_uint(32);
       cell ref = val~load_maybe_ref();
 
@@ -61,9 +62,10 @@ int version() method_id {
     set_c3(ec.begin_parse().bless());
   }
 
+  (_, slice pl) = ldreftos(in_msg_body);
   set_data(begin_cell()
     .store_uint(v, 32)
-    .store_ref(process_message(st, msg_value, balance, in_msg_full, ldreftos(in_msg_body)))
+    .store_ref(process_message(st, msg_value, balance, in_msg_full, pl))
   .end_cell());
 }
 
