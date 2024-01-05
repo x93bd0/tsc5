@@ -5,10 +5,13 @@ int cell_null?(cell c) asm "ISNULL";
 int slice_empty?(slice s) asm "SEMPTY";
 
 
-cell get_storage() {
-  slice s = get_data().begin_parse();
-  return s~load_ref();
-}
+cell get_storage()
+asm """
+  c4 PUSH      // (c4)
+  CTOS         // (s4)
+  LDREF        // (ref, s4)
+  DROP         // (ref)
+""";
 
 () wrap_storage(cell storage, int version_id) impure {
   set_data(begin_cell()
@@ -17,10 +20,13 @@ cell get_storage() {
   .end_cell());
 }
 
-int version() method_id {
-  slice cs = get_data().begin_parse();
-  return cs~load_uint(32);
-}
+int version() method_id
+asm """
+  c4 PUSH      // (c4)
+  CTOS         // (s4)
+  32 LDU       // (v, s4)
+  DROP         // (v)
+""";
 
 () recv_internal(int msg_value, int balance, cell in_msg_full, slice in_msg_body) impure {
   int ev = in_msg_body~load_uint(32);
